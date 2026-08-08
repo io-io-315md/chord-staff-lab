@@ -6,13 +6,13 @@ import {
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=7';
+} from './music-theory.js?v=8';
 import {
   pointerYInSvg,
   renderGrandStaff,
   renderNoteReadingStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=7';
+} from './staff-renderer.js?v=8';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -32,8 +32,17 @@ const noteNamingButtons = document.querySelectorAll('[data-note-naming]');
 const noteReadingStaff = document.querySelector('#note-reading-staff');
 const inputStaff = document.querySelector('#input-staff');
 const selectedNotesElement = document.querySelector('#selected-notes');
+const staffInvertDownButton = document.querySelector('#staff-invert-down');
+const staffInvertUpButton = document.querySelector('#staff-invert-up');
+const staffResetInversionButton = document.querySelector('#staff-reset-inversion');
+const staffInversionAction = document.querySelector('#staff-inversion-action');
+const staffInversionLabel = document.querySelector('#staff-inversion-label');
 const candidateList = document.querySelector('#candidate-list');
 const candidateCount = document.querySelector('#candidate-count');
+const candidatePreview = document.querySelector('#candidate-preview');
+const candidatePreviewName = document.querySelector('#candidate-preview-name');
+const candidatePreviewStaff = document.querySelector('#candidate-preview-staff');
+const candidatePreviewDetail = document.querySelector('#candidate-preview-detail');
 const keyRoot = document.querySelector('#key-root');
 const keyMode = document.querySelector('#key-mode');
 const undoButton = document.querySelector('#undo-note');
@@ -41,6 +50,9 @@ const clearButton = document.querySelector('#clear-notes');
 
 let activeAccidental = '';
 let placedNotes = [];
+let staffBaseNotes = [];
+let staffInversionSteps = 0;
+let currentCandidates = [];
 let currentChord = null;
 let inversionSteps = 0;
 let noteNaming = 'letter';
@@ -166,32 +178,83 @@ function emptyCandidateMarkup(message = '2音以上を置くと<br />候補を�
   return `<div class="empty-candidates"><span aria-hidden="true">♪</span><p>${message}</p></div>`;
 }
 
+function clearCandidatePreview() {
+  candidatePreview.classList.add('is-empty');
+  candidatePreviewName.textContent = '候補を選択';
+  candidatePreviewStaff.replaceChildren();
+  candidatePreviewDetail.textContent = '候補にカーソルを合わせるか、タップすると詳細を表示します。';
+  candidateList.querySelectorAll('.candidate-card').forEach((card) => card.classList.remove('is-previewing'));
+}
+
+function candidateNoteList(notes) {
+  return notes.length ? notes.map((note) => displayedNoteName(note)).join('・') : 'なし';
+}
+
+function renderCandidatePreview(candidate, index) {
+  if (!candidate) {
+    clearCandidatePreview();
+    return;
+  }
+
+  const inputPitchClasses = new Set(placedNotes.map((note) => note.pitchClass));
+  const previewChord = parseChordSymbol(candidate.symbol);
+  candidatePreview.classList.remove('is-empty');
+  candidatePreviewName.textContent = candidate.symbol;
+  renderGrandStaff(candidatePreviewStaff, previewChord.notes, {
+    noteLabelFormatter: displayedNoteName,
+    noteClassResolver: (note) => inputPitchClasses.has(note.pitchClass) ? 'staff-note--matched' : 'staff-note--missing',
+  });
+  const matchedCount = candidate.type.tones.length - candidate.missingNoteNames.length;
+  const missingText = candidateNoteList(candidate.missingNoteNames);
+  const extraText = candidateNoteList(candidate.extraNoteNames);
+  candidatePreviewDetail.textContent = `一致 ${matchedCount}/${candidate.type.tones.length}音　不足: ${missingText}　余分: ${extraText}`;
+  candidateList.querySelectorAll('.candidate-card').forEach((card) => {
+    card.classList.toggle('is-previewing', Number(card.dataset.candidateIndex) === index);
+  });
+}
+
 function renderCandidates() {
   const key = getKeyContext();
   const candidates = rankChordCandidates(placedNotes, key);
+  currentCandidates = candidates;
   candidateCount.textContent = candidates.length;
   candidateCount.title = `${formatKeyName(key)} で解析`;
 
   if (placedNotes.length < 2) {
     candidateList.innerHTML = emptyCandidateMarkup();
+    clearCandidatePreview();
     return;
   }
   if (!candidates.length) {
     candidateList.innerHTML = emptyCandidateMarkup('一致する候補がありません。<br />音を追加してみてください。');
+    clearCandidatePreview();
     return;
   }
 
   candidateList.innerHTML = candidates
     .map((candidate, index) => `
-      <article class="candidate-card">
+      <article class="candidate-card" data-candidate-index="${index}" tabindex="0" role="button" aria-label="${candidate.symbol}の五線譜と一致内容を表示">
         <div class="candidate-top">
           <div><span class="candidate-rank">${String(index + 1).padStart(2, '0')}</span><strong class="candidate-name">${candidate.symbol}</strong></div>
           <span class="match-badge${candidate.exact ? ' match-badge--exact' : ''}">${candidate.exact ? '完全一致' : `${candidate.confidence}%`}</span>
         </div>
         <p class="candidate-notes">${candidate.reasons.join(' · ')}</p>
+        <p class="candidate-comparison">不足: ${candidateNoteList(candidate.missingNoteNames)}　余分: ${candidateNoteList(candidate.extraNoteNames)}</p>
       </article>`)
     .join('');
+  renderCandidatePreview(candidates[0], 0);
 }
+
+function previewCandidateFromEvent(event) {
+  const card = event.target.closest?.('[data-candidate-index]');
+  if (!card) return;
+  const index = Number(card.dataset.candidateIndex);
+  renderCandidatePreview(currentCandidates[index], index);
+}
+
+candidateList.addEventListener('pointerover', previewCandidateFromEvent);
+candidateList.addEventListener('focusin', previewCandidateFromEvent);
+candidateList.addEventListener('click', previewCandidateFromEvent);
 
 function renderPlacedNotes() {
   const sorted = [...placedNotes].sort((a, b) => a.midi - b.midi);
@@ -209,11 +272,41 @@ function renderStaffAnalysis() {
     noteLabelFormatter: displayedNoteName,
   });
   renderPlacedNotes();
+  renderStaffInversionControls();
   renderCandidates();
 }
 
+function commitStaffBaseNotes() {
+  staffBaseNotes = placedNotes.map((note) => ({ ...note }));
+  staffInversionSteps = 0;
+}
+
+function renderStaffInversionControls() {
+  const maxInversions = Math.max(0, staffBaseNotes.length - 1);
+  const canInvert = maxInversions > 0;
+  const isOriginal = staffInversionSteps === 0;
+  staffInversionAction.textContent = isOriginal ? 'VOICING' : 'RESET';
+  staffInversionLabel.textContent = isOriginal ? '入力時の配置' : '元に戻す';
+  staffResetInversionButton.setAttribute('aria-label', isOriginal ? '入力時の配置' : '入力時の配置に戻す');
+  staffInvertUpButton.disabled = !canInvert || staffInversionSteps >= maxInversions;
+  staffInvertDownButton.disabled = !canInvert || staffInversionSteps <= -maxInversions;
+  staffResetInversionButton.disabled = isOriginal;
+}
+
+function applyStaffInversion(nextSteps) {
+  const maxInversions = Math.max(0, staffBaseNotes.length - 1);
+  staffInversionSteps = Math.max(-maxInversions, Math.min(maxInversions, nextSteps));
+  placedNotes = invertChordNotes(staffBaseNotes, staffInversionSteps);
+  renderStaffAnalysis();
+}
+
+staffInvertDownButton.addEventListener('click', () => applyStaffInversion(staffInversionSteps - 1));
+staffInvertUpButton.addEventListener('click', () => applyStaffInversion(staffInversionSteps + 1));
+staffResetInversionButton.addEventListener('click', () => applyStaffInversion(0));
+
 function removeNote(id) {
   placedNotes = placedNotes.filter((note) => note.id !== id);
+  commitStaffBaseNotes();
   renderStaffAnalysis();
 }
 
@@ -229,6 +322,7 @@ function placeNoteAtEvent(event) {
   const note = noteFromStaffPosition(position.letter, position.octave, activeAccidental);
   placedNotes = placedNotes.filter((item) => !(item.letter === note.letter && item.octave === note.octave));
   placedNotes.push(note);
+  commitStaffBaseNotes();
   renderStaffAnalysis();
 }
 
@@ -253,12 +347,15 @@ document.querySelector('#accidental-control').addEventListener('click', (event) 
 });
 
 undoButton.addEventListener('click', () => {
-  placedNotes.pop();
+  const lastAddedId = staffBaseNotes.at(-1)?.id;
+  placedNotes = placedNotes.filter((note) => note.id !== lastAddedId);
+  commitStaffBaseNotes();
   renderStaffAnalysis();
 });
 
 clearButton.addEventListener('click', () => {
   placedNotes = [];
+  commitStaffBaseNotes();
   renderStaffAnalysis();
 });
 

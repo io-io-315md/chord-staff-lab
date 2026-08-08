@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
     <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
     <title>Chord Staff Lab | コードと五線譜の相互変換</title>
-    <link rel="stylesheet" href="./styles.css?v=7" />
+    <link rel="stylesheet" href="./styles.css?v=8" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -168,6 +168,14 @@
                 </div>
 
                 <svg id="input-staff" class="grand-staff input-staff" aria-label="音符を配置する大譜表"></svg>
+                <div class="voicing-controls voicing-controls--staff" aria-label="入力した和音の転回操作">
+                  <button type="button" id="staff-invert-down" aria-label="入力音の最高音を1オクターブ下げる" disabled>↓ <span>下へ転回</span></button>
+                  <button type="button" id="staff-reset-inversion" class="voicing-status" aria-label="入力時の配置" disabled>
+                    <small id="staff-inversion-action">VOICING</small>
+                    <strong id="staff-inversion-label" aria-live="polite">入力時の配置</strong>
+                  </button>
+                  <button type="button" id="staff-invert-up" aria-label="入力音の最低音を1オクターブ上げる" disabled><span>上へ転回</span> ↑</button>
+                </div>
                 <div class="selected-notes" id="selected-notes" aria-live="polite"></div>
                 <p class="bass-detection-hint">ト音記号の最低音は転回形として扱い、ヘ音記号の最低音だけを分数コードのベースとして判定します。</p>
               </div>
@@ -204,6 +212,18 @@
                   </div>
                   <span id="candidate-count">0</span>
                 </div>
+                <section class="candidate-preview is-empty" id="candidate-preview" aria-live="polite" aria-label="コード候補の五線譜プレビュー">
+                  <div class="candidate-preview-header">
+                    <span>STAFF PREVIEW</span>
+                    <strong id="candidate-preview-name">候補を選択</strong>
+                  </div>
+                  <svg id="candidate-preview-staff" class="grand-staff candidate-preview-staff" aria-label="選択した候補の五線譜"></svg>
+                  <div class="candidate-preview-legend" aria-label="音符の色分け">
+                    <span><i class="preview-dot preview-dot--matched"></i>入力済み</span>
+                    <span><i class="preview-dot preview-dot--missing"></i>不足</span>
+                  </div>
+                  <p id="candidate-preview-detail">候補にカーソルを合わせるか、タップすると詳細を表示します。</p>
+                </section>
                 <div class="candidate-list" id="candidate-list">
                   <div class="empty-candidates">
                     <span aria-hidden="true">♪</span>
@@ -253,6 +273,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=7"></script>
+    <script type="module" src="./src/app.js?v=8"></script>
   </body>
 </html>

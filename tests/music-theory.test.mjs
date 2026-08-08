@@ -128,4 +128,15 @@ test('near matches are returned when no exact chord exists', () => {
   const candidates = rankChordCandidates(notes, { root: 0, mode: 'major' });
   assert.ok(candidates.length > 0);
   assert.ok(candidates.some((candidate) => !candidate.exact));
+  assert.ok(candidates.every((candidate) => Array.isArray(candidate.missingNoteNames)));
+  assert.ok(candidates.every((candidate) => Array.isArray(candidate.extraNoteNames)));
+});
+
+test('candidate comparison reports missing and extra note names', () => {
+  const notes = [inputNote('C', 0, 60), inputNote('E', 4, 64), inputNote('B', 11, 71)];
+  const candidates = rankChordCandidates(notes, { root: 0, mode: 'major' });
+  const cMajorSeven = candidates.find((candidate) => candidate.symbol === 'Cmaj7');
+  assert.ok(cMajorSeven);
+  assert.deepEqual(cMajorSeven.missingNoteNames, ['G']);
+  assert.deepEqual(cMajorSeven.extraNoteNames, []);
 });

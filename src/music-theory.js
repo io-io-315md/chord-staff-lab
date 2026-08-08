@@ -233,6 +233,12 @@ export function rankChordCandidates(inputNotes, key = null) {
       const rootName = preferredPitchName(rootPitchClass, preferFlats);
       const slash = explicitBass && explicitBass.pitchClass !== rootPitchClass ? `/${selectedBassName}` : '';
       const symbol = `${rootName}${type.suffix}${slash}`;
+      const missingNoteNames = [...chordSet]
+        .filter((pitchClass) => !uniquePitchClasses.has(pitchClass))
+        .map((pitchClass) => preferredPitchName(pitchClass, preferFlats));
+      const extraNoteNames = [...uniquePitchClasses]
+        .filter((pitchClass) => !chordSet.has(pitchClass))
+        .map((pitchClass) => preferredPitchName(pitchClass, preferFlats));
       const notes = type.tones.map((toneInfo) => ({
         ...spellTone(parseNoteName(rootName), toneInfo),
         degree: toneInfo.label,
@@ -243,7 +249,7 @@ export function rankChordCandidates(inputNotes, key = null) {
       if (hasKeyCenter && rootPitchClass === keyRoot) reasons.push('Key center のトニック');
       else if (hasKeyCenter && rootInKey) reasons.push('Key center 内のルート');
 
-      results.push({ symbol, rootPitchClass, type, notes, exact, score, reasons, missing, extra });
+      results.push({ symbol, rootPitchClass, type, notes, exact, score, reasons, missing, extra, missingNoteNames, extraNoteNames });
     }
   }
 

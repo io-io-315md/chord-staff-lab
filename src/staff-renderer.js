@@ -66,11 +66,11 @@ function noteXOffsets(notes) {
   return offsets;
 }
 
-function renderNote(svg, note, xOffset, interactive, noteLabelFormatter) {
+function renderNote(svg, note, xOffset, interactive, noteLabelFormatter, noteClass) {
   const y = yForNote(note);
   const x = NOTE_X + xOffset;
   const group = svgElement('g', {
-    class: `staff-note${interactive ? ' staff-note--interactive' : ''}`,
+    class: `staff-note${interactive ? ' staff-note--interactive' : ''}${noteClass ? ` ${noteClass}` : ''}`,
     role: interactive ? 'button' : 'img',
     tabindex: interactive ? '0' : '-1',
     'aria-label': `${noteLabelFormatter(note)}${note.octave}${interactive ? ' を削除' : ''}`,
@@ -98,6 +98,7 @@ export function renderGrandStaff(svg, notes = [], {
   interactive = false,
   emptyMessage = '',
   noteLabelFormatter = (note) => note.display,
+  noteClassResolver = () => '',
 } = {}) {
   svg.replaceChildren();
   svg.setAttribute('viewBox', '0 140 780 248');
@@ -135,7 +136,14 @@ export function renderGrandStaff(svg, notes = [], {
       class: 'note-stem note-stem--shared',
     }));
   }
-  notes.forEach((note, index) => svg.append(renderNote(svg, note, offsets[index], interactive, noteLabelFormatter)));
+  notes.forEach((note, index) => svg.append(renderNote(
+    svg,
+    note,
+    offsets[index],
+    interactive,
+    noteLabelFormatter,
+    noteClassResolver(note),
+  )));
 }
 
 export function renderNoteReadingStaff(svg, noteLabelFormatter = (note) => note.display) {
