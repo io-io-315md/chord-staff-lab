@@ -139,6 +139,7 @@ select:focus-visible,
 .section-heading h2,
 .pane-header h2,
 .candidate-heading h2 { margin: 0; font-family: Georgia, "Yu Mincho", serif; font-size: 23px; font-weight: 500; letter-spacing: -0.02em; }
+.section-heading h2 small { color: #a9b8af; font-family: Inter, "Hiragino Sans", sans-serif; font-size: 9px; font-weight: 750; letter-spacing: 0.08em; }
 .section-heading .overline, .pane-header .overline, .candidate-heading .overline { margin-bottom: 5px; }
 .step-badge { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #b64e32; border-radius: 50%; color: var(--accent); font-family: Georgia, serif; font-style: italic; }
 .step-badge--dark { border-color: #98a99f; color: #d8e2db; }
@@ -191,6 +192,7 @@ select:focus-visible,
 .clef--bass { font-size: 53px; }
 .note-head { fill: var(--accent); stroke: #fff8f0; stroke-width: 1; }
 .note-stem { stroke: var(--accent); stroke-width: 1.7; }
+.note-stem--shared { pointer-events: none; }
 .accidental { fill: var(--ink); font-family: Georgia, "Noto Music", serif; font-size: 22px; }
 .staff-empty { fill: #a6a39c; font-family: Georgia, "Yu Mincho", serif; font-size: 14px; font-style: italic; }
 .pitch-hit-zone { fill: transparent; cursor: crosshair; }
@@ -235,13 +237,23 @@ select:focus-visible,
 .guide-heading h2 { margin: 0; font-family: Georgia, "Yu Mincho", serif; font-size: 24px; font-weight: 500; }
 .guide-heading > p:last-child { margin: 11px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .note-reading-table-wrap { overflow-x: auto; }
-.note-reading-table { width: 100%; min-width: 510px; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.note-reading-table { width: 100%; min-width: 560px; table-layout: fixed; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.reading-label-column { width: 104px; }
+.reading-note-column { width: calc((100% - 104px) / 7); }
 .note-reading-table th,
 .note-reading-table td { height: 48px; padding: 8px 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; }
 .note-reading-table tr:last-child > * { border-bottom: 0; }
 .note-reading-table tr > *:last-child { border-right: 0; }
 .note-reading-table th { min-width: 92px; background: #f2eee5; color: #626a64; font-size: 10px; letter-spacing: 0.05em; }
 .note-reading-table td { font-family: Georgia, "Yu Mincho", serif; font-size: 17px; }
+.note-staff-row th { height: 126px; }
+.note-staff-row td { height: 126px; padding: 0; }
+.note-reading-staff { display: block; width: 100%; height: 126px; }
+.reading-staff-line,
+.reading-ledger-line { stroke: #667069; stroke-width: 1; }
+.reading-clef { fill: var(--ink); font-family: "Segoe UI Symbol", "Noto Music", serif; font-size: 52px; }
+.reading-note-head { fill: var(--accent); }
+.reading-note-stem { stroke: var(--accent); stroke-width: 1.6; }
 .note-reading-table tr { transition: background 0.2s, color 0.2s; }
 html[data-note-naming="letter"] [data-reading-row="letter"],
 html[data-note-naming="solfege"] [data-reading-row="solfege"] { background: #edf2ea; color: var(--deep); }
@@ -353,7 +365,7 @@ footer p { margin: 0; font-style: italic; }
   .analysis-pane { display: block; padding: 28px 20px 32px; }
   .candidate-heading { margin-top: 27px; }
   .note-reading-guide { margin-bottom: 34px; padding: 24px 18px; }
-  .note-reading-table { min-width: 455px; }
+  .note-reading-table { min-width: 560px; }
   .note-reading-table th, .note-reading-table td { padding-inline: 7px; }
   footer { align-items: center; flex-direction: column; gap: 8px; text-align: center; }
 }

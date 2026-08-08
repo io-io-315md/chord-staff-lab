@@ -91,9 +91,6 @@ function renderNote(svg, note, xOffset, interactive, noteLabelFormatter) {
     group.append(svgElement('text', { x: x - 23, y: y + 6, class: 'accidental' }, accidentalGlyph(note.accidental)));
   }
   group.append(svgElement('ellipse', { cx: x, cy: y, rx: 9.5, ry: 6.6, transform: `rotate(-18 ${x} ${y})`, class: 'note-head' }));
-  if (interactive) {
-    group.append(svgElement('line', { x1: x + 8, y1: y - 1, x2: x + 8, y2: y - 36, class: 'note-stem' }));
-  }
   return group;
 }
 
@@ -128,7 +125,7 @@ export function renderGrandStaff(svg, notes = [], {
   }
 
   const offsets = noteXOffsets(notes);
-  if (notes.length && !interactive) {
+  if (notes.length) {
     const noteYs = notes.map(yForNote);
     svg.append(svgElement('line', {
       x1: NOTE_X + 8,
@@ -139,6 +136,37 @@ export function renderGrandStaff(svg, notes = [], {
     }));
   }
   notes.forEach((note, index) => svg.append(renderNote(svg, note, offsets[index], interactive, noteLabelFormatter)));
+}
+
+export function renderNoteReadingStaff(svg, noteLabelFormatter = (note) => note.display) {
+  const scaleNotes = [
+    { display: 'C', octave: 4, y: 98 },
+    { display: 'D', octave: 4, y: 91 },
+    { display: 'E', octave: 4, y: 84 },
+    { display: 'F', octave: 4, y: 77 },
+    { display: 'G', octave: 4, y: 70 },
+    { display: 'A', octave: 4, y: 63 },
+    { display: 'B', octave: 4, y: 56 },
+  ];
+
+  svg.replaceChildren();
+  svg.setAttribute('viewBox', '0 0 700 126');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-label', `五線譜上の ${scaleNotes.map((note) => noteLabelFormatter(note)).join('、')}`);
+
+  [28, 42, 56, 70, 84].forEach((y) => {
+    svg.append(svgElement('line', { x1: 0, y1: y, x2: 700, y2: y, class: 'reading-staff-line' }));
+  });
+  svg.append(svgElement('text', { x: 4, y: 84, class: 'reading-clef' }, '𝄞'));
+
+  scaleNotes.forEach((note, index) => {
+    const x = 50 + index * 100;
+    if (index === 0) {
+      svg.append(svgElement('line', { x1: x - 14, y1: 98, x2: x + 15, y2: 98, class: 'reading-ledger-line' }));
+    }
+    svg.append(svgElement('line', { x1: x + 7, y1: note.y - 1, x2: x + 7, y2: note.y - 30, class: 'reading-note-stem' }));
+    svg.append(svgElement('ellipse', { cx: x, cy: note.y, rx: 8.5, ry: 5.8, transform: `rotate(-18 ${x} ${note.y})`, class: 'reading-note-head' }));
+  });
 }
 
 export function pointerYInSvg(svg, event) {

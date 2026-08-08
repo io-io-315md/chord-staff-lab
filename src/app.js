@@ -6,12 +6,13 @@ import {
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=5';
+} from './music-theory.js?v=6';
 import {
   pointerYInSvg,
   renderGrandStaff,
+  renderNoteReadingStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=5';
+} from './staff-renderer.js?v=6';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -28,6 +29,7 @@ const resetInversionButton = document.querySelector('#reset-inversion');
 const inversionAction = document.querySelector('#inversion-action');
 const inversionLabel = document.querySelector('#inversion-label');
 const noteNamingButtons = document.querySelectorAll('[data-note-naming]');
+const noteReadingStaff = document.querySelector('#note-reading-staff');
 const inputStaff = document.querySelector('#input-staff');
 const selectedNotesElement = document.querySelector('#selected-notes');
 const candidateList = document.querySelector('#candidate-list');
@@ -152,6 +154,7 @@ document.querySelectorAll('.mode-tab').forEach((tab) => {
 
 function getKeyContext() {
   const selectedOption = keyRoot.options[keyRoot.selectedIndex];
+  if (!keyRoot.value) return null;
   return {
     root: Number(keyRoot.value),
     mode: keyMode.value,
@@ -259,7 +262,10 @@ clearButton.addEventListener('click', () => {
   renderStaffAnalysis();
 });
 
-keyRoot.addEventListener('change', renderCandidates);
+keyRoot.addEventListener('change', () => {
+  keyMode.disabled = !keyRoot.value;
+  renderCandidates();
+});
 keyMode.addEventListener('change', renderCandidates);
 
 function applyNoteNaming(naming) {
@@ -273,6 +279,7 @@ function applyNoteNaming(naming) {
   } catch {
     // Ignore storage restrictions; the current page still updates.
   }
+  renderNoteReadingStaff(noteReadingStaff, displayedNoteName);
   renderCurrentChord();
   renderStaffAnalysis();
 }

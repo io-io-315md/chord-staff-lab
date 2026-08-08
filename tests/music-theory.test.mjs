@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChordSymbol, formatNoteName, invertChordNotes, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
+import { buildChordSymbol, formatKeyName, formatNoteName, invertChordNotes, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -92,6 +92,14 @@ test('key center changes the preferred interpretation of an ambiguous set', () =
   const [inAMinor] = rankChordCandidates(notes, { root: 9, mode: 'minor' });
   assert.equal(inCMajor.symbol, 'C6');
   assert.equal(inAMinor.symbol, 'Am7/C');
+});
+
+test('key center is optional and adds no key-based reasons when omitted', () => {
+  const notes = [inputNote('C', 0, 48), inputNote('E', 4, 52), inputNote('G', 7, 55)];
+  const candidates = rankChordCandidates(notes, null);
+  assert.ok(candidates.length > 0);
+  assert.ok(candidates.every((candidate) => candidate.reasons.every((reason) => !reason.includes('Key center'))));
+  assert.equal(formatKeyName(null), 'Key center 指定なし');
 });
 
 test('near matches are returned when no exact chord exists', () => {

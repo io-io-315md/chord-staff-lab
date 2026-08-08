@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
     <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
     <title>Chord Staff Lab | コードと五線譜の相互変換</title>
-    <link rel="stylesheet" href="./styles.css?v=5" />
+    <link rel="stylesheet" href="./styles.css?v=6" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -176,14 +176,15 @@
                   <span class="step-badge step-badge--dark">B</span>
                   <div>
                     <p class="overline">CONTEXT</p>
-                    <h2>Key center</h2>
+                    <h2>Key center <small>任意</small></h2>
                   </div>
                 </div>
-                <p class="context-copy">調性を指定すると、同じ構成音でも自然な候補を上位にします。</p>
+                <p class="context-copy">指定しなくても解析できます。必要なときだけ調性を加えると、自然な候補を上位にします。</p>
                 <div class="key-controls">
                   <label>
-                    <span class="field-label">Root</span>
+                    <span class="field-label">Root <small>任意</small></span>
                     <select id="key-root">
+                      <option value="" selected>指定なし</option>
                       <option value="0">C</option><option value="1">D♭</option><option value="2">D</option><option value="3">E♭</option>
                       <option value="4">E</option><option value="5">F</option><option value="6">F♯</option><option value="7">G</option>
                       <option value="8">A♭</option><option value="9">A</option><option value="10">B♭</option><option value="11">B</option>
@@ -191,7 +192,7 @@
                   </label>
                   <label>
                     <span class="field-label">Mode</span>
-                    <select id="key-mode"><option value="major">Major</option><option value="minor">Minor</option></select>
+                    <select id="key-mode" disabled><option value="major">Major</option><option value="minor">Minor</option></select>
                   </label>
                 </div>
 
@@ -222,7 +223,15 @@
           <div class="note-reading-table-wrap">
             <table class="note-reading-table">
               <caption class="sr-only">英字音名とドレミの対応表</caption>
+              <colgroup>
+                <col class="reading-label-column" />
+                <col span="7" class="reading-note-column" />
+              </colgroup>
               <tbody>
+                <tr class="note-staff-row">
+                  <th scope="row">五線譜</th>
+                  <td colspan="7"><svg id="note-reading-staff" class="note-reading-staff" role="img" aria-label="五線譜上の音階"></svg></td>
+                </tr>
                 <tr data-reading-row="letter">
                   <th scope="row">英字音名</th>
                   <td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>A</td><td>B</td>
@@ -243,6 +252,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=5"></script>
+    <script type="module" src="./src/app.js?v=6"></script>
   </body>
 </html>
