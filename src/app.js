@@ -1,15 +1,16 @@
 import {
   buildChordSymbol,
   formatKeyName,
+  invertChordNotes,
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=3';
+} from './music-theory.js?v=4';
 import {
   pointerYInSvg,
   renderGrandStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=3';
+} from './staff-renderer.js?v=4';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -20,6 +21,10 @@ const chordError = document.querySelector('#chord-error');
 const chordStaff = document.querySelector('#chord-staff');
 const displayedChord = document.querySelector('#displayed-chord');
 const toneSummary = document.querySelector('#tone-summary');
+const invertDownButton = document.querySelector('#invert-down');
+const invertUpButton = document.querySelector('#invert-up');
+const resetInversionButton = document.querySelector('#reset-inversion');
+const inversionLabel = document.querySelector('#inversion-label');
 const inputStaff = document.querySelector('#input-staff');
 const selectedNotesElement = document.querySelector('#selected-notes');
 const candidateList = document.querySelector('#candidate-list');
@@ -31,6 +36,8 @@ const clearButton = document.querySelector('#clear-notes');
 
 let activeAccidental = '';
 let placedNotes = [];
+let currentChord = null;
+let inversionSteps = 0;
 
 function getSelectedChordSymbol() {
   return buildChordSymbol(chordRoot.value, chordQuality.value, chordBass.value);
@@ -42,24 +49,40 @@ function updateChordSelection({ render = true } = {}) {
   if (render) renderChord(symbol);
 }
 
-function renderChord(value) {
+function renderCurrentChord() {
+  if (!currentChord) return;
+
+  const renderedNotes = invertChordNotes(currentChord.notes, inversionSteps);
+  const maxInversions = Math.max(1, currentChord.notes.length - 1);
+  displayedChord.textContent = currentChord.symbol;
+  renderGrandStaff(chordStaff, renderedNotes);
+  inversionLabel.textContent = inversionSteps === 0
+    ? '基本配置'
+    : `${inversionSteps > 0 ? '上へ' : '下へ'} ${Math.abs(inversionSteps)}回`;
+  invertUpButton.disabled = inversionSteps >= maxInversions;
+  invertDownButton.disabled = inversionSteps <= -maxInversions;
+  resetInversionButton.disabled = inversionSteps === 0;
+
+  toneSummary.style.setProperty('--tone-count', currentChord.type.tones.length);
+  toneSummary.innerHTML = `
+    <div class="tone-root">
+      <small>ROOT</small>
+      <strong>${currentChord.root.display}</strong>
+    </div>
+    <div class="tone-table">
+      ${currentChord.notes
+        .filter((note) => note.role !== 'bass')
+        .map((note) => `<div class="tone-cell"><span>${note.degree}</span><strong>${note.display}</strong></div>`)
+        .join('')}
+    </div>`;
+}
+
+function renderChord(value, { resetInversion = true } = {}) {
   try {
-    const chord = parseChordSymbol(value);
+    currentChord = parseChordSymbol(value);
+    if (resetInversion) inversionSteps = 0;
     chordError.hidden = true;
-    displayedChord.textContent = chord.symbol;
-    renderGrandStaff(chordStaff, chord.notes);
-    toneSummary.style.setProperty('--tone-count', chord.type.tones.length);
-    toneSummary.innerHTML = `
-      <div class="tone-root">
-        <small>ROOT</small>
-        <strong>${chord.root.display}</strong>
-      </div>
-      <div class="tone-table">
-        ${chord.notes
-          .filter((note) => note.role !== 'bass')
-          .map((note) => `<div class="tone-cell"><span>${note.degree}</span><strong>${note.display}</strong></div>`)
-          .join('')}
-      </div>`;
+    renderCurrentChord();
     return true;
   } catch (error) {
     chordError.textContent = error.message;
@@ -67,6 +90,27 @@ function renderChord(value) {
     return false;
   }
 }
+
+invertDownButton.addEventListener('click', () => {
+  const maxInversions = Math.max(1, currentChord.notes.length - 1);
+  if (inversionSteps > -maxInversions) {
+    inversionSteps -= 1;
+    renderCurrentChord();
+  }
+});
+
+invertUpButton.addEventListener('click', () => {
+  const maxInversions = Math.max(1, currentChord.notes.length - 1);
+  if (inversionSteps < maxInversions) {
+    inversionSteps += 1;
+    renderCurrentChord();
+  }
+});
+
+resetInversionButton.addEventListener('click', () => {
+  inversionSteps = 0;
+  renderCurrentChord();
+});
 
 chordForm.addEventListener('submit', (event) => {
   event.preventDefault();

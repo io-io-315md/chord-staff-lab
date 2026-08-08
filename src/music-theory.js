@@ -64,6 +64,20 @@ export function buildChordSymbol(root, quality = '', bass = '') {
   return `${root}${quality}${slashBass}`;
 }
 
+export function invertChordNotes(notes, steps = 0) {
+  const result = notes.map((note) => ({ ...note }));
+  const direction = Math.sign(steps);
+
+  for (let index = 0; index < Math.abs(steps); index += 1) {
+    result.sort((a, b) => a.midi - b.midi);
+    const note = direction > 0 ? result[0] : result[result.length - 1];
+    note.midi += direction * 12;
+    note.octave += direction;
+  }
+
+  return result.sort((a, b) => a.midi - b.midi);
+}
+
 function findChordType(quality) {
   const normalized = quality.replaceAll('♭', 'b').replaceAll('♯', '#');
   const exact = CHORD_TYPES.find((type) => type.aliases.some((alias) => alias === normalized));

@@ -4,9 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="コード名と五線譜を相互に変換できる、作曲・楽譜読解のためのコード判定ツール。" />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#f5f1e8" />
-    <title>Chord Staff Lab</title>
-    <link rel="stylesheet" href="./styles.css?v=3" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Chord Staff Lab | コードと五線譜の相互変換" />
+    <meta property="og:description" content="コードを五線譜で確認し、五線譜上の音からコード候補を検索できる無料ツール。" />
+    <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
+    <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
+    <title>Chord Staff Lab | コードと五線譜の相互変換</title>
+    <link rel="stylesheet" href="./styles.css?v=4" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Chord Staff Lab",
+        "url": "https://io-io-315md.github.io/chord-staff-lab/",
+        "applicationCategory": "MusicApplication",
+        "operatingSystem": "Any",
+        "description": "コードと五線譜を相互変換する音楽理論ツール"
+      }
+    </script>
   </head>
   <body>
     <div class="site-shell">
@@ -16,19 +33,13 @@
             <span>♭</span><span>♯</span>
           </span>
           <span>
-            <strong>Chord Staff</strong>
-            <small>LAB</small>
+            <strong>Chord Staff Lab</strong>
           </span>
         </a>
-        <p class="topbar-note">楽譜から和音を読み解く、小さな実験室。</p>
       </header>
 
       <main>
-        <section class="hero" aria-labelledby="page-title">
-          <p class="eyebrow">MUSIC THEORY TOOL</p>
-          <h1 id="page-title">音符とコードを、<br /><em>行き来しよう。</em></h1>
-          <p class="hero-copy">コードネームを大譜表で確かめる。譜面上の音から、あり得るコードを探す。鍵盤を開かず、その場で。</p>
-        </section>
+        <h1 class="sr-only">Chord Staff Lab - コードと五線譜の相互変換ツール</h1>
 
         <section class="lab-card" aria-label="Chord Staff Lab">
           <div class="mode-tabs" role="tablist" aria-label="変換モード">
@@ -112,6 +123,14 @@
                   <span class="status-pill"><i></i> Live</span>
                 </div>
                 <svg id="chord-staff" class="grand-staff" aria-label="コードの大譜表表示"></svg>
+                <div class="voicing-controls" aria-label="コードの転回操作">
+                  <button type="button" id="invert-down" aria-label="最高音を1オクターブ下げる">↓ <span>下へ転回</span></button>
+                  <button type="button" id="reset-inversion" class="voicing-status" aria-label="基本配置に戻す">
+                    <small>VOICING</small>
+                    <strong id="inversion-label" aria-live="polite">基本配置</strong>
+                  </button>
+                  <button type="button" id="invert-up" aria-label="最低音を1オクターブ上げる"><span>上へ転回</span> ↑</button>
+                </div>
                 <div class="tone-summary" id="tone-summary" aria-live="polite"></div>
               </div>
             </div>
@@ -193,6 +212,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=3"></script>
+    <script type="module" src="./src/app.js?v=4"></script>
   </body>
 </html>

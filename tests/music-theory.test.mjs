@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChordSymbol, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
+import { buildChordSymbol, invertChordNotes, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -49,6 +49,19 @@ test('selection builder supports slash chords and compound qualities', () => {
 
 test('selection builder omits an enharmonic duplicate bass', () => {
   assert.equal(buildChordSymbol('C#', 'm7', 'Db'), 'C#m7');
+});
+
+test('upward inversion moves the lowest chord tone up an octave', () => {
+  const notes = parseChordSymbol('Cmaj7').notes;
+  const inverted = invertChordNotes(notes, 1);
+  assert.deepEqual(inverted.map((note) => `${note.display}${note.octave}`), ['E4', 'G4', 'B4', 'C5']);
+  assert.deepEqual(notes.map((note) => `${note.display}${note.octave}`), ['C4', 'E4', 'G4', 'B4']);
+});
+
+test('downward inversion moves the highest chord tone down an octave', () => {
+  const notes = parseChordSymbol('Cmaj7').notes;
+  const inverted = invertChordNotes(notes, -1);
+  assert.deepEqual(inverted.map((note) => `${note.display}${note.octave}`), ['B3', 'C4', 'E4', 'G4']);
 });
 
 test('exact triad is ranked first', () => {

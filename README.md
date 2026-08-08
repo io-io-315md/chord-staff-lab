@@ -9,6 +9,7 @@
 - ルート、コードタイプ、分数コードのベース音を選択して入力
 - `Cmaj7`、`Am7`、`D7`、`F#m7b5`、`Bbmaj9`、`C/E`、`C6/9/E` などを解析
 - ト音記号・ヘ音記号の大譜表に構成音を表示
+- 最低音を上げる上方転回と、最高音を下げる下方転回に対応
 - ♯ / ♭、テンション、オンコードに対応
 - 構成音と度数を一覧表示
 
@@ -40,4 +41,4 @@ npm test
 
 ## Deploy
 
-すべて相対パスの静的ファイルなので、GitHub Pages の **Deploy from a branch** でそのまま公開できます。
+すべて相対パスの静的ファイルなので、GitHub Pages の **Deploy from a branch** でそのまま公開できます。`robots.txt`、`sitemap.xml`、canonical URL、構造化データも含みます。

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://io-io-315md.github.io/chord-staff-lab/sitemap.xml
