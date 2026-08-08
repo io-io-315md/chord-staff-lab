@@ -6,13 +6,13 @@ import {
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=8';
+} from './music-theory.js?v=9';
 import {
   pointerYInSvg,
   renderGrandStaff,
   renderNoteReadingStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=8';
+} from './staff-renderer.js?v=9';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -182,7 +182,7 @@ function clearCandidatePreview() {
   candidatePreview.classList.add('is-empty');
   candidatePreviewName.textContent = '候補を選択';
   candidatePreviewStaff.replaceChildren();
-  candidatePreviewDetail.textContent = '候補にカーソルを合わせるか、タップすると詳細を表示します。';
+  candidatePreviewDetail.textContent = '右の候補にカーソルを合わせるか、タップすると音符を表示します。';
   candidateList.querySelectorAll('.candidate-card').forEach((card) => card.classList.remove('is-previewing'));
 }
 
@@ -242,7 +242,11 @@ function renderCandidates() {
         <p class="candidate-comparison">不足: ${candidateNoteList(candidate.missingNoteNames)}　余分: ${candidateNoteList(candidate.extraNoteNames)}</p>
       </article>`)
     .join('');
-  renderCandidatePreview(candidates[0], 0);
+  candidateList.querySelectorAll('.candidate-card').forEach((card) => {
+    card.addEventListener('pointerenter', previewCandidateFromEvent);
+    card.addEventListener('mouseenter', previewCandidateFromEvent);
+  });
+  clearCandidatePreview();
 }
 
 function previewCandidateFromEvent(event) {
@@ -252,7 +256,6 @@ function previewCandidateFromEvent(event) {
   renderCandidatePreview(currentCandidates[index], index);
 }
 
-candidateList.addEventListener('pointerover', previewCandidateFromEvent);
 candidateList.addEventListener('focusin', previewCandidateFromEvent);
 candidateList.addEventListener('click', previewCandidateFromEvent);
 

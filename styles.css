@@ -303,7 +303,7 @@ html[data-note-naming="solfege"] [data-reading-row="solfege"] { background: #edf
 .candidate-heading { display: flex; align-items: end; justify-content: space-between; margin: 28px 0 14px; }
 .candidate-heading h2 { font-size: 22px; }
 .candidate-heading > span { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: #3d5347; color: #bdc9c1; font-size: 10px; }
-.candidate-preview { margin-bottom: 13px; padding: 12px; border: 1px solid #52645a; border-radius: 10px; background: #293d33; }
+.candidate-preview { margin: 14px 0 0; padding: 12px; border: 1px solid #52645a; border-radius: 10px; background: #293d33; }
 .candidate-preview-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 7px; }
 .candidate-preview-header span { color: #a9b8af; font-size: 8px; font-weight: 800; letter-spacing: 0.13em; }
 .candidate-preview-header strong { font-family: Georgia, serif; font-size: 18px; font-weight: 500; }
@@ -351,7 +351,7 @@ footer p { margin: 0; font-style: italic; }
   .analysis-pane { display: grid; grid-template-columns: 1fr 1.35fr; column-gap: 24px; }
   .analysis-pane .section-heading, .context-copy, .key-controls { grid-column: 1; }
   .candidate-heading, .candidate-list { grid-column: 2; }
-  .candidate-preview { grid-column: 2; grid-row: 2; }
+  .candidate-preview { grid-column: 1; grid-row: 4; }
   .candidate-heading { grid-row: 1; margin-top: 0; }
   .candidate-list { grid-row: 3 / span 2; }
   .note-reading-guide { grid-template-columns: 1fr; gap: 20px; }
@@ -390,7 +390,7 @@ footer p { margin: 0; font-style: italic; }
   .tap-guide { width: 100%; margin-left: 0; }
   .analysis-pane { display: block; padding: 28px 20px 32px; }
   .candidate-heading { margin-top: 27px; }
-  .candidate-preview { margin-bottom: 11px; }
+  .candidate-preview { margin-top: 14px; }
   .note-reading-guide { margin-bottom: 34px; padding: 24px 18px; }
   .note-reading-table { min-width: 560px; }
   .note-reading-table th, .note-reading-table td { padding-inline: 7px; }
