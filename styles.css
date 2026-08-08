@@ -274,6 +274,7 @@ html[data-note-naming="solfege"] [data-reading-row="solfege"] { background: #edf
 .staff-mode-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.85fr); min-height: 610px; }
 .staff-entry-pane { min-width: 0; padding: 38px 40px 32px; border-right: 1px solid var(--line); }
 .analysis-pane { padding: 38px 30px; background: var(--deep); color: #f5f3ed; }
+.context-column, .candidates-column { min-width: 0; }
 .staff-entry-header { margin-bottom: 12px; }
 .staff-entry-header h2 { font-size: 28px; }
 .toolbar-actions { display: flex; gap: 8px; }
@@ -348,12 +349,10 @@ footer p { margin: 0; font-style: italic; }
   .control-pane, .staff-pane { padding: 33px 26px; }
   .staff-mode-layout { grid-template-columns: 1fr; }
   .staff-entry-pane { border-right: 0; }
-  .analysis-pane { display: grid; grid-template-columns: 1fr 1.35fr; column-gap: 24px; }
-  .analysis-pane .section-heading, .context-copy, .key-controls { grid-column: 1; }
-  .candidate-heading, .candidate-list { grid-column: 2; }
-  .candidate-preview { grid-column: 1; grid-row: 4; }
-  .candidate-heading { grid-row: 1; margin-top: 0; }
-  .candidate-list { grid-row: 3 / span 2; }
+  .analysis-pane { display: grid; grid-template-columns: 1fr 1.35fr; column-gap: 24px; align-items: start; }
+  .context-column { grid-column: 1; }
+  .candidates-column { grid-column: 2; }
+  .candidate-heading { margin-top: 0; }
   .note-reading-guide { grid-template-columns: 1fr; gap: 20px; }
   .accidental-guide { grid-column: 1; margin-top: -8px; }
 }
