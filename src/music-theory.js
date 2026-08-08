@@ -56,6 +56,14 @@ export function parseNoteName(value) {
   };
 }
 
+export function buildChordSymbol(root, quality = '', bass = '') {
+  const rootNote = parseNoteName(root);
+  if (!bass) return `${root}${quality}`;
+  const bassNote = parseNoteName(bass);
+  const slashBass = bassNote.pitchClass === rootNote.pitchClass ? '' : `/${bass}`;
+  return `${root}${quality}${slashBass}`;
+}
+
 function findChordType(quality) {
   const normalized = quality.replaceAll('♭', 'b').replaceAll('♯', '#');
   const exact = CHORD_TYPES.find((type) => type.aliases.some((alias) => alias === normalized));

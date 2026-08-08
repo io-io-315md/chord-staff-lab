@@ -1,4 +1,5 @@
 import {
+  buildChordSymbol,
   formatKeyName,
   noteFromStaffPosition,
   parseChordSymbol,
@@ -11,7 +12,10 @@ import {
 } from './staff-renderer.js';
 
 const chordForm = document.querySelector('#chord-form');
-const chordInput = document.querySelector('#chord-input');
+const chordRoot = document.querySelector('#chord-root');
+const chordQuality = document.querySelector('#chord-quality');
+const chordBass = document.querySelector('#chord-bass');
+const selectedChordSymbol = document.querySelector('#selected-chord-symbol');
 const chordError = document.querySelector('#chord-error');
 const chordStaff = document.querySelector('#chord-staff');
 const displayedChord = document.querySelector('#displayed-chord');
@@ -27,7 +31,16 @@ const clearButton = document.querySelector('#clear-notes');
 
 let activeAccidental = '';
 let placedNotes = [];
-let inputTimer;
+
+function getSelectedChordSymbol() {
+  return buildChordSymbol(chordRoot.value, chordQuality.value, chordBass.value);
+}
+
+function updateChordSelection({ render = true } = {}) {
+  const symbol = getSelectedChordSymbol();
+  selectedChordSymbol.textContent = symbol.replaceAll('#', '♯').replaceAll('b', '♭');
+  if (render) renderChord(symbol);
+}
 
 function renderChord(value) {
   try {
@@ -57,21 +70,11 @@ function renderChord(value) {
 
 chordForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  renderChord(chordInput.value);
+  updateChordSelection();
 });
 
-chordInput.addEventListener('input', () => {
-  window.clearTimeout(inputTimer);
-  inputTimer = window.setTimeout(() => {
-    if (chordInput.value.trim()) renderChord(chordInput.value);
-  }, 280);
-});
-
-document.querySelector('#chord-examples').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-chord]');
-  if (!button) return;
-  chordInput.value = button.dataset.chord;
-  renderChord(button.dataset.chord);
+[chordRoot, chordQuality, chordBass].forEach((select) => {
+  select.addEventListener('change', () => updateChordSelection());
 });
 
 document.querySelectorAll('.mode-tab').forEach((tab) => {
@@ -195,5 +198,5 @@ clearButton.addEventListener('click', () => {
 keyRoot.addEventListener('change', renderCandidates);
 keyMode.addEventListener('change', renderCandidates);
 
-renderChord(chordInput.value);
+updateChordSelection();
 renderStaffAnalysis();

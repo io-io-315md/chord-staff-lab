@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
+import { buildChordSymbol, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -39,6 +39,16 @@ test('6/9 is recognized as a chord quality, not a slash bass', () => {
   assert.equal(chord.symbol, 'C6/9');
   assert.equal(chord.bass, null);
   assert.deepEqual(displays('C6/9'), ['C', 'E', 'G', 'A', 'D']);
+});
+
+test('selection builder supports slash chords and compound qualities', () => {
+  assert.equal(buildChordSymbol('C', '', 'E'), 'C/E');
+  assert.equal(buildChordSymbol('C', '6/9', 'E'), 'C6/9/E');
+  assert.equal(parseChordSymbol(buildChordSymbol('C', '6/9', 'E')).symbol, 'C6/9/E');
+});
+
+test('selection builder omits an enharmonic duplicate bass', () => {
+  assert.equal(buildChordSymbol('C#', 'm7', 'Db'), 'C#m7');
 });
 
 test('exact triad is ranked first', () => {

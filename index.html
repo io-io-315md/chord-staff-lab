@@ -49,31 +49,58 @@
                   <span class="step-badge">A</span>
                   <div>
                     <p class="overline">INPUT</p>
-                    <h2>コードを入力</h2>
+                    <h2>コードを選択</h2>
                   </div>
                 </div>
 
                 <form id="chord-form">
-                  <label class="field-label" for="chord-input">Chord symbol</label>
-                  <div class="chord-input-wrap">
-                    <input id="chord-input" name="chord" value="Cmaj7" autocomplete="off" spellcheck="false" aria-describedby="chord-hint" />
-                    <button class="primary-button" type="submit">表示する <span aria-hidden="true">→</span></button>
+                  <div class="chord-builder">
+                    <label>
+                      <span class="field-label">Root</span>
+                      <select id="chord-root" aria-label="コードのルート音">
+                        <option value="C">C</option><option value="C#">C♯</option><option value="Db">D♭</option>
+                        <option value="D">D</option><option value="D#">D♯</option><option value="Eb">E♭</option>
+                        <option value="E">E</option><option value="F">F</option><option value="F#">F♯</option>
+                        <option value="Gb">G♭</option><option value="G">G</option><option value="G#">G♯</option>
+                        <option value="Ab">A♭</option><option value="A">A</option><option value="A#">A♯</option>
+                        <option value="Bb">B♭</option><option value="B">B</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span class="field-label">Chord type</span>
+                      <select id="chord-quality" aria-label="コードタイプ">
+                        <option value="">Major</option><option value="m">Minor</option>
+                        <option value="7">7</option><option value="maj7" selected>maj7</option><option value="m7">m7</option>
+                        <option value="6">6</option><option value="m6">m6</option><option value="6/9">6/9</option><option value="m6/9">m6/9</option>
+                        <option value="9">9</option><option value="maj9">maj9</option><option value="m9">m9</option>
+                        <option value="11">11</option><option value="m11">m11</option><option value="13">13</option><option value="m13">m13</option>
+                        <option value="sus2">sus2</option><option value="sus4">sus4</option><option value="7sus4">7sus4</option>
+                        <option value="add9">add9</option><option value="madd9">m(add9)</option>
+                        <option value="dim">dim</option><option value="dim7">dim7</option><option value="aug">aug</option>
+                        <option value="m7b5">m7♭5</option><option value="mMaj7">mMaj7</option>
+                      </select>
+                    </label>
+                    <label class="bass-select-label">
+                      <span class="field-label">Bass note <small>分数コード</small></span>
+                      <select id="chord-bass" aria-label="分数コードのベース音">
+                        <option value="">指定なし</option>
+                        <option value="C">C</option><option value="C#">C♯</option><option value="Db">D♭</option>
+                        <option value="D">D</option><option value="D#">D♯</option><option value="Eb">E♭</option>
+                        <option value="E">E</option><option value="F">F</option><option value="F#">F♯</option>
+                        <option value="Gb">G♭</option><option value="G">G</option><option value="G#">G♯</option>
+                        <option value="Ab">A♭</option><option value="A">A</option><option value="A#">A♯</option>
+                        <option value="Bb">B♭</option><option value="B">B</option>
+                      </select>
+                    </label>
                   </div>
-                  <p class="field-hint" id="chord-hint">maj7 · m7 · 7 · m7♭5 · 6/9 · slash chord など</p>
+                  <div class="symbol-preview" aria-live="polite">
+                    <span>Selected chord</span>
+                    <strong id="selected-chord-symbol">Cmaj7</strong>
+                  </div>
+                  <button class="primary-button primary-button--wide" type="submit">五線譜に表示 <span aria-hidden="true">→</span></button>
+                  <p class="field-hint" id="chord-hint">ベース音を選ぶと C/E のような分数コードになります。</p>
                   <p class="form-error" id="chord-error" role="alert" hidden></p>
                 </form>
-
-                <div class="example-block">
-                  <p class="field-label">Try an example</p>
-                  <div class="example-list" id="chord-examples">
-                    <button type="button" data-chord="Am7">Am7</button>
-                    <button type="button" data-chord="D7">D7</button>
-                    <button type="button" data-chord="F#m7b5">F♯m7♭5</button>
-                    <button type="button" data-chord="Bbmaj9">B♭maj9</button>
-                    <button type="button" data-chord="C/E">C/E</button>
-                    <button type="button" data-chord="C6/9">C6/9</button>
-                  </div>
-                </div>
               </aside>
 
               <div class="staff-pane">
@@ -96,7 +123,7 @@
                 <div class="pane-header staff-entry-header">
                   <div>
                     <p class="overline">PLACE NOTES</p>
-                    <h2>大譜表をタップ</h2>
+                    <h2>五線譜をタップ</h2>
                   </div>
                   <div class="toolbar-actions">
                     <button class="text-button" id="undo-note" type="button" disabled>↶ 戻す</button>
