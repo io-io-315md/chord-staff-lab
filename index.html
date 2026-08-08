@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
     <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
     <title>Chord Staff Lab | コードと五線譜の相互変換</title>
-    <link rel="stylesheet" href="./styles.css?v=4" />
+    <link rel="stylesheet" href="./styles.css?v=5" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -36,6 +36,13 @@
             <strong>Chord Staff Lab</strong>
           </span>
         </a>
+        <div class="note-naming-switch" aria-label="音名の読み方">
+          <span>音名</span>
+          <div role="group" aria-label="音名表記を切り替える">
+            <button type="button" data-note-naming="letter" aria-pressed="true">C D E</button>
+            <button type="button" data-note-naming="solfege" aria-pressed="false">ド レ ミ</button>
+          </div>
+        </div>
       </header>
 
       <main>
@@ -126,7 +133,7 @@
                 <div class="voicing-controls" aria-label="コードの転回操作">
                   <button type="button" id="invert-down" aria-label="最高音を1オクターブ下げる">↓ <span>下へ転回</span></button>
                   <button type="button" id="reset-inversion" class="voicing-status" aria-label="基本配置に戻す">
-                    <small>VOICING</small>
+                    <small id="inversion-action">VOICING</small>
                     <strong id="inversion-label" aria-live="polite">基本配置</strong>
                   </button>
                   <button type="button" id="invert-up" aria-label="最低音を1オクターブ上げる"><span>上へ転回</span> ↑</button>
@@ -205,6 +212,30 @@
             </div>
           </div>
         </section>
+
+        <section class="note-reading-guide" aria-labelledby="note-reading-title">
+          <div class="guide-heading">
+            <p class="overline">NOTE NAMES</p>
+            <h2 id="note-reading-title">音名と読み方</h2>
+            <p>C・D・E表記と、日本で一般的なドレミの対応です。コード名は常に英字で表示します。</p>
+          </div>
+          <div class="note-reading-table-wrap">
+            <table class="note-reading-table">
+              <caption class="sr-only">英字音名とドレミの対応表</caption>
+              <tbody>
+                <tr data-reading-row="letter">
+                  <th scope="row">英字音名</th>
+                  <td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>A</td><td>B</td>
+                </tr>
+                <tr data-reading-row="solfege">
+                  <th scope="row">ドレミ</th>
+                  <td>ド</td><td>レ</td><td>ミ</td><td>ファ</td><td>ソ</td><td>ラ</td><td>シ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="accidental-guide"><strong>♯</strong> 半音上げる　　<strong>♭</strong> 半音下げる　　例：C♯ = ド♯、B♭ = シ♭</p>
+        </section>
       </main>
 
       <footer>
@@ -212,6 +243,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=4"></script>
+    <script type="module" src="./src/app.js?v=5"></script>
   </body>
 </html>

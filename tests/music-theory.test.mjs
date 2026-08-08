@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChordSymbol, invertChordNotes, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
+import { buildChordSymbol, formatNoteName, invertChordNotes, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -62,6 +62,14 @@ test('downward inversion moves the highest chord tone down an octave', () => {
   const notes = parseChordSymbol('Cmaj7').notes;
   const inverted = invertChordNotes(notes, -1);
   assert.deepEqual(inverted.map((note) => `${note.display}${note.octave}`), ['B3', 'C4', 'E4', 'G4']);
+});
+
+test('note names can switch to Japanese solfege without changing chord symbols', () => {
+  assert.equal(formatNoteName('C', 'solfege'), 'ド');
+  assert.equal(formatNoteName('F♯', 'solfege'), 'ファ♯');
+  assert.equal(formatNoteName('B♭', 'solfege'), 'シ♭');
+  assert.equal(formatNoteName('C', 'letter'), 'C');
+  assert.equal(parseChordSymbol('Cmaj7').symbol, 'Cmaj7');
 });
 
 test('exact triad is ranked first', () => {

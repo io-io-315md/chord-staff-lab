@@ -1,16 +1,17 @@
 import {
   buildChordSymbol,
+  formatNoteName,
   formatKeyName,
   invertChordNotes,
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=4';
+} from './music-theory.js?v=5';
 import {
   pointerYInSvg,
   renderGrandStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=4';
+} from './staff-renderer.js?v=5';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -24,7 +25,9 @@ const toneSummary = document.querySelector('#tone-summary');
 const invertDownButton = document.querySelector('#invert-down');
 const invertUpButton = document.querySelector('#invert-up');
 const resetInversionButton = document.querySelector('#reset-inversion');
+const inversionAction = document.querySelector('#inversion-action');
 const inversionLabel = document.querySelector('#inversion-label');
+const noteNamingButtons = document.querySelectorAll('[data-note-naming]');
 const inputStaff = document.querySelector('#input-staff');
 const selectedNotesElement = document.querySelector('#selected-notes');
 const candidateList = document.querySelector('#candidate-list');
@@ -38,6 +41,18 @@ let activeAccidental = '';
 let placedNotes = [];
 let currentChord = null;
 let inversionSteps = 0;
+let noteNaming = 'letter';
+
+try {
+  const savedNoteNaming = localStorage.getItem('chord-staff-lab-note-naming');
+  if (savedNoteNaming === 'solfege') noteNaming = savedNoteNaming;
+} catch {
+  // The preference still works for this visit when storage is unavailable.
+}
+
+function displayedNoteName(note) {
+  return formatNoteName(note, noteNaming);
+}
 
 function getSelectedChordSymbol() {
   return buildChordSymbol(chordRoot.value, chordQuality.value, chordBass.value);
@@ -55,10 +70,11 @@ function renderCurrentChord() {
   const renderedNotes = invertChordNotes(currentChord.notes, inversionSteps);
   const maxInversions = Math.max(1, currentChord.notes.length - 1);
   displayedChord.textContent = currentChord.symbol;
-  renderGrandStaff(chordStaff, renderedNotes);
-  inversionLabel.textContent = inversionSteps === 0
-    ? '基本配置'
-    : `${inversionSteps > 0 ? '上へ' : '下へ'} ${Math.abs(inversionSteps)}回`;
+  renderGrandStaff(chordStaff, renderedNotes, { noteLabelFormatter: displayedNoteName });
+  const isBasicVoicing = inversionSteps === 0;
+  inversionAction.textContent = isBasicVoicing ? 'VOICING' : 'RESET';
+  inversionLabel.textContent = isBasicVoicing ? '基本配置' : '元に戻す';
+  resetInversionButton.setAttribute('aria-label', isBasicVoicing ? '基本配置' : '基本配置に戻す');
   invertUpButton.disabled = inversionSteps >= maxInversions;
   invertDownButton.disabled = inversionSteps <= -maxInversions;
   resetInversionButton.disabled = inversionSteps === 0;
@@ -72,7 +88,7 @@ function renderCurrentChord() {
     <div class="tone-table">
       ${currentChord.notes
         .filter((note) => note.role !== 'bass')
-        .map((note) => `<div class="tone-cell"><span>${note.degree}</span><strong>${note.display}</strong></div>`)
+        .map((note) => `<div class="tone-cell"><span>${note.degree}</span><strong>${displayedNoteName(note)}</strong></div>`)
         .join('')}
     </div>`;
 }
@@ -177,14 +193,18 @@ function renderCandidates() {
 function renderPlacedNotes() {
   const sorted = [...placedNotes].sort((a, b) => a.midi - b.midi);
   selectedNotesElement.innerHTML = sorted.length
-    ? sorted.map((note) => `<span class="note-chip">${note.display}${note.octave}<button type="button" data-remove-note="${note.id}" aria-label="${note.display}${note.octave} を削除">×</button></span>`).join('')
+    ? sorted.map((note) => `<span class="note-chip">${displayedNoteName(note)}${note.octave}<button type="button" data-remove-note="${note.id}" aria-label="${displayedNoteName(note)}${note.octave} を削除">×</button></span>`).join('')
     : '<span class="field-hint">配置した音がここに並びます。</span>';
   undoButton.disabled = placedNotes.length === 0;
   clearButton.disabled = placedNotes.length === 0;
 }
 
 function renderStaffAnalysis() {
-  renderGrandStaff(inputStaff, placedNotes, { interactive: true, emptyMessage: placedNotes.length ? '' : 'タップして音符を置く' });
+  renderGrandStaff(inputStaff, placedNotes, {
+    interactive: true,
+    emptyMessage: placedNotes.length ? '' : 'タップして音符を置く',
+    noteLabelFormatter: displayedNoteName,
+  });
   renderPlacedNotes();
   renderCandidates();
 }
@@ -242,5 +262,24 @@ clearButton.addEventListener('click', () => {
 keyRoot.addEventListener('change', renderCandidates);
 keyMode.addEventListener('change', renderCandidates);
 
+function applyNoteNaming(naming) {
+  noteNaming = naming;
+  document.documentElement.dataset.noteNaming = naming;
+  noteNamingButtons.forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.noteNaming === naming));
+  });
+  try {
+    localStorage.setItem('chord-staff-lab-note-naming', naming);
+  } catch {
+    // Ignore storage restrictions; the current page still updates.
+  }
+  renderCurrentChord();
+  renderStaffAnalysis();
+}
+
+noteNamingButtons.forEach((button) => {
+  button.addEventListener('click', () => applyNoteNaming(button.dataset.noteNaming));
+});
+
+applyNoteNaming(noteNaming);
 updateChordSelection();
-renderStaffAnalysis();

@@ -66,14 +66,14 @@ function noteXOffsets(notes) {
   return offsets;
 }
 
-function renderNote(svg, note, xOffset, interactive) {
+function renderNote(svg, note, xOffset, interactive, noteLabelFormatter) {
   const y = yForNote(note);
   const x = NOTE_X + xOffset;
   const group = svgElement('g', {
     class: `staff-note${interactive ? ' staff-note--interactive' : ''}`,
     role: interactive ? 'button' : 'img',
     tabindex: interactive ? '0' : '-1',
-    'aria-label': `${note.display}${note.octave}${interactive ? ' を削除' : ''}`,
+    'aria-label': `${noteLabelFormatter(note)}${note.octave}${interactive ? ' を削除' : ''}`,
     'data-note-id': note.id || '',
   });
 
@@ -91,11 +91,17 @@ function renderNote(svg, note, xOffset, interactive) {
     group.append(svgElement('text', { x: x - 23, y: y + 6, class: 'accidental' }, accidentalGlyph(note.accidental)));
   }
   group.append(svgElement('ellipse', { cx: x, cy: y, rx: 9.5, ry: 6.6, transform: `rotate(-18 ${x} ${y})`, class: 'note-head' }));
-  group.append(svgElement('line', { x1: x + 8, y1: y - 1, x2: x + 8, y2: y - 36, class: 'note-stem' }));
+  if (interactive) {
+    group.append(svgElement('line', { x1: x + 8, y1: y - 1, x2: x + 8, y2: y - 36, class: 'note-stem' }));
+  }
   return group;
 }
 
-export function renderGrandStaff(svg, notes = [], { interactive = false, emptyMessage = '' } = {}) {
+export function renderGrandStaff(svg, notes = [], {
+  interactive = false,
+  emptyMessage = '',
+  noteLabelFormatter = (note) => note.display,
+} = {}) {
   svg.replaceChildren();
   svg.setAttribute('viewBox', '0 140 780 248');
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -122,7 +128,17 @@ export function renderGrandStaff(svg, notes = [], { interactive = false, emptyMe
   }
 
   const offsets = noteXOffsets(notes);
-  notes.forEach((note, index) => svg.append(renderNote(svg, note, offsets[index], interactive)));
+  if (notes.length && !interactive) {
+    const noteYs = notes.map(yForNote);
+    svg.append(svgElement('line', {
+      x1: NOTE_X + 8,
+      y1: Math.max(...noteYs) - 1,
+      x2: NOTE_X + 8,
+      y2: Math.min(...noteYs) - 36,
+      class: 'note-stem note-stem--shared',
+    }));
+  }
+  notes.forEach((note, index) => svg.append(renderNote(svg, note, offsets[index], interactive, noteLabelFormatter)));
 }
 
 export function pointerYInSvg(svg, event) {

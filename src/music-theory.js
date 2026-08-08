@@ -78,6 +78,22 @@ export function invertChordNotes(notes, steps = 0) {
   return result.sort((a, b) => a.midi - b.midi);
 }
 
+const SOLFEGE_NAMES = {
+  C: 'ド',
+  D: 'レ',
+  E: 'ミ',
+  F: 'ファ',
+  G: 'ソ',
+  A: 'ラ',
+  B: 'シ',
+};
+
+export function formatNoteName(note, naming = 'letter') {
+  const display = typeof note === 'string' ? note : note.display;
+  if (naming !== 'solfege') return display;
+  return display.replace(/^([A-G])/, (_, letter) => SOLFEGE_NAMES[letter]);
+}
+
 function findChordType(quality) {
   const normalized = quality.replaceAll('♭', 'b').replaceAll('♯', '#');
   const exact = CHORD_TYPES.find((type) => type.aliases.some((alias) => alias === normalized));
