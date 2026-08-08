@@ -4,12 +4,12 @@ import {
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js';
+} from './music-theory.js?v=3';
 import {
   pointerYInSvg,
   renderGrandStaff,
   staffPositionFromY,
-} from './staff-renderer.js';
+} from './staff-renderer.js?v=3';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
