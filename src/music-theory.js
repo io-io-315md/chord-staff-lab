@@ -193,12 +193,13 @@ export function rankChordCandidates(inputNotes, key = null) {
   const uniquePitchClasses = new Set(inputNotes.map((note) => mod(note.pitchClass)));
   if (uniquePitchClasses.size < 2) return [];
 
-  const bass = [...inputNotes].sort((a, b) => a.midi - b.midi)[0];
+  const bassClefNotes = inputNotes.filter((note) => note.midi < 60);
+  const explicitBass = [...bassClefNotes].sort((a, b) => a.midi - b.midi)[0] || null;
   const hasKeyCenter = key?.root !== '' && key?.root !== null && key?.root !== undefined;
   const keyRoot = hasKeyCenter ? Number(key.root) : null;
   const keyScale = hasKeyCenter ? keyScalePitchClasses(key) : null;
   const preferFlats = Boolean(key?.preferFlats) || (hasKeyCenter && [1, 3, 5, 8, 10].includes(keyRoot));
-  const selectedBassName = bassDisplay(inputNotes, preferFlats);
+  const selectedBassName = explicitBass ? bassDisplay(bassClefNotes, preferFlats) : '';
   const results = [];
 
   for (let rootPitchClass = 0; rootPitchClass < 12; rootPitchClass += 1) {
@@ -212,11 +213,13 @@ export function rankChordCandidates(inputNotes, key = null) {
       const missing = chordSet.size - intersection;
       const extra = uniquePitchClasses.size - intersection;
       const rootPresent = uniquePitchClasses.has(rootPitchClass);
-      const bassIsChordTone = chordSet.has(bass.pitchClass);
+      const bassIsChordTone = explicitBass ? chordSet.has(explicitBass.pitchClass) : false;
 
       let score = exact ? 100 : 44 * (intersection / uniquePitchClasses.size) + 38 * (intersection / chordSet.size) - missing * 7 - extra * 9;
       score += rootPresent ? 3 : -8;
-      score += bass.pitchClass === rootPitchClass ? 8 : bassIsChordTone ? 3 : -9;
+      if (explicitBass) {
+        score += explicitBass.pitchClass === rootPitchClass ? 8 : bassIsChordTone ? 3 : -9;
+      }
       score -= type.complexity * 0.35;
 
       const rootInKey = hasKeyCenter && keyScale.has(rootPitchClass);
@@ -228,7 +231,7 @@ export function rankChordCandidates(inputNotes, key = null) {
       }
 
       const rootName = preferredPitchName(rootPitchClass, preferFlats);
-      const slash = bass.pitchClass !== rootPitchClass && bassIsChordTone ? `/${selectedBassName}` : '';
+      const slash = explicitBass && explicitBass.pitchClass !== rootPitchClass ? `/${selectedBassName}` : '';
       const symbol = `${rootName}${type.suffix}${slash}`;
       const notes = type.tones.map((toneInfo) => ({
         ...spellTone(parseNoteName(rootName), toneInfo),
@@ -236,7 +239,7 @@ export function rankChordCandidates(inputNotes, key = null) {
       }));
 
       const reasons = [exact ? '構成音が完全一致' : `構成音 ${intersection}/${uniquePitchClasses.size} 音が一致`];
-      reasons.push(bass.pitchClass === rootPitchClass ? '最低音がルート' : bassIsChordTone ? `最低音 ${selectedBassName} を考慮` : '最低音は非コードトーン');
+      if (explicitBass) reasons.push(`ヘ音記号の最低音 ${selectedBassName} をベースとして考慮`);
       if (hasKeyCenter && rootPitchClass === keyRoot) reasons.push('Key center のトニック');
       else if (hasKeyCenter && rootInKey) reasons.push('Key center 内のルート');
 

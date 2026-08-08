@@ -79,10 +79,31 @@ test('exact triad is ranked first', () => {
   assert.equal(candidate.exact, true);
 });
 
-test('lowest note creates an inversion or slash-chord name', () => {
-  const notes = [inputNote('E', 4, 52), inputNote('G', 7, 55), inputNote('C', 0, 60)];
+test('lowest treble-clef note is treated as an inversion, not a slash bass', () => {
+  const notes = [inputNote('E', 4, 64), inputNote('G', 7, 67), inputNote('C', 0, 72)];
+  const [candidate] = rankChordCandidates(notes, { root: 0, mode: 'major' });
+  assert.equal(candidate.symbol, 'C');
+  assert.equal(candidate.exact, true);
+});
+
+test('lowest bass-clef note creates a slash-chord name when it differs from the root', () => {
+  const notes = [inputNote('E', 4, 52), inputNote('G', 7, 67), inputNote('C', 0, 72)];
   const [candidate] = rankChordCandidates(notes, { root: 0, mode: 'major' });
   assert.equal(candidate.symbol, 'C/E');
+  assert.equal(candidate.exact, true);
+});
+
+test('D G B in the treble clef is ranked as G major without a slash', () => {
+  const notes = [inputNote('D', 2, 62), inputNote('G', 7, 67), inputNote('B', 11, 71)];
+  const [candidate] = rankChordCandidates(notes, { root: 7, mode: 'major' });
+  assert.equal(candidate.symbol, 'G');
+  assert.equal(candidate.exact, true);
+});
+
+test('D in the bass clef with G major chord tones is named G over D', () => {
+  const notes = [inputNote('D', 2, 50), inputNote('G', 7, 67), inputNote('B', 11, 71)];
+  const [candidate] = rankChordCandidates(notes, { root: 7, mode: 'major' });
+  assert.equal(candidate.symbol, 'G/D');
   assert.equal(candidate.exact, true);
 });
 

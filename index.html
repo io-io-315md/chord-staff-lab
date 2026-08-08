@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
     <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
     <title>Chord Staff Lab | コードと五線譜の相互変換</title>
-    <link rel="stylesheet" href="./styles.css?v=6" />
+    <link rel="stylesheet" href="./styles.css?v=7" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -169,6 +169,7 @@
 
                 <svg id="input-staff" class="grand-staff input-staff" aria-label="音符を配置する大譜表"></svg>
                 <div class="selected-notes" id="selected-notes" aria-live="polite"></div>
+                <p class="bass-detection-hint">ト音記号の最低音は転回形として扱い、ヘ音記号の最低音だけを分数コードのベースとして判定します。</p>
               </div>
 
               <aside class="analysis-pane">
@@ -252,6 +253,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=6"></script>
+    <script type="module" src="./src/app.js?v=7"></script>
   </body>
 </html>
