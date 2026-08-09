@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
     <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
     <title>Chord Staff Lab | コードと五線譜の相互変換</title>
-    <link rel="stylesheet" href="./styles.css?v=13" />
+    <link rel="stylesheet" href="./styles.css?v=14" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -71,7 +71,7 @@
                   </div>
                 </div>
 
-                <form id="chord-form">
+                <div id="chord-form">
                   <div class="chord-builder">
                     <label>
                       <span class="field-label">Root</span>
@@ -121,10 +121,9 @@
                     <span>Selected chord</span>
                     <strong id="selected-chord-symbol">Cmaj7</strong>
                   </div>
-                  <button class="primary-button primary-button--wide" type="submit">五線譜に表示 <span aria-hidden="true">→</span></button>
                   <p class="field-hint" id="chord-hint">ベース音を選ぶと C/E のような分数コードになります。</p>
                   <p class="form-error" id="chord-error" role="alert" hidden></p>
-                </form>
+                </div>
               </aside>
 
               <div class="staff-pane">
@@ -235,11 +234,14 @@
                     <strong id="candidate-preview-name">候補を選択</strong>
                   </div>
                   <svg id="candidate-preview-staff" class="grand-staff candidate-preview-staff" aria-label="選択した候補の五線譜"></svg>
+                  <button class="candidate-sound-button" id="play-candidate" type="button" aria-label="表示中の候補コードをピアノ音で再生" disabled>
+                    <span aria-hidden="true">♪</span><strong id="candidate-sound-button-label">サウンドを再生</strong>
+                  </button>
                   <div class="candidate-preview-legend" aria-label="音符の色分け">
                     <span><i class="preview-dot preview-dot--matched"></i>入力済み</span>
                     <span><i class="preview-dot preview-dot--missing"></i>不足</span>
                   </div>
-                  <p id="candidate-preview-detail">右の候補にカーソルを合わせるか、タップすると音符を表示して再生します。</p>
+                  <p id="candidate-preview-detail">候補にカーソルを合わせると音符を表示し、候補をクリックすると音を再生します。</p>
                 </section>
                 </div>
 
@@ -301,6 +303,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=13"></script>
+    <script type="module" src="./src/app.js?v=14"></script>
   </body>
 </html>
