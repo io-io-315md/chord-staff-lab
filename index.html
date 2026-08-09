@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://io-io-315md.github.io/chord-staff-lab/" />
     <link rel="canonical" href="https://io-io-315md.github.io/chord-staff-lab/" />
     <title>Chord Staff Lab | コードと五線譜の相互変換</title>
-    <link rel="stylesheet" href="./styles.css?v=11" />
+    <link rel="stylesheet" href="./styles.css?v=12" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -56,7 +56,7 @@
             </button>
             <button class="mode-tab" id="tab-staff" role="tab" aria-selected="false" aria-controls="panel-staff" data-mode="staff">
               <span class="tab-number">02</span>
-              五線譜 → コード
+              コード検索
             </button>
           </div>
 
@@ -133,9 +133,11 @@
                     <p class="overline">NOTATION</p>
                     <h2 id="displayed-chord">Cmaj7</h2>
                   </div>
-                  <span class="status-pill"><i></i> Live</span>
+                  <button class="sound-button" id="play-chord" type="button" aria-label="表示中のコードをピアノ音で再生">
+                    <span aria-hidden="true">♪</span><strong id="sound-button-label">サウンド</strong>
+                  </button>
                 </div>
-                <svg id="chord-staff" class="grand-staff" aria-label="コードの大譜表表示"></svg>
+                <svg id="chord-staff" class="grand-staff" aria-label="コードの五線譜表示"></svg>
                 <div class="voicing-controls" aria-label="コードの転回操作">
                   <button type="button" id="invert-down" aria-label="最高音を1オクターブ下げる">↓ <span>下へ転回</span></button>
                   <button type="button" id="reset-inversion" class="voicing-status" aria-label="基本配置に戻す">
@@ -154,8 +156,8 @@
               <div class="staff-entry-pane">
                 <div class="pane-header staff-entry-header">
                   <div>
-                    <p class="overline">PLACE NOTES</p>
-                    <h2>五線譜をタップ</h2>
+                    <p class="overline">CHORD SEARCH</p>
+                    <h2 id="input-method-title">五線譜をタップ</h2>
                   </div>
                   <div class="toolbar-actions">
                     <button class="text-button" id="undo-note" type="button" disabled>↶ 戻す</button>
@@ -163,17 +165,32 @@
                   </div>
                 </div>
 
-                <div class="notation-toolbar" aria-label="臨時記号">
-                  <span>臨時記号</span>
-                  <div class="segmented-control" id="accidental-control">
-                    <button type="button" data-accidental="b" aria-pressed="false">♭</button>
-                    <button type="button" data-accidental="" aria-pressed="true">♮</button>
-                    <button type="button" data-accidental="#" aria-pressed="false">♯</button>
-                  </div>
-                  <span class="tap-guide"><i></i> 線・間をタップして追加</span>
+                <div class="input-method-tabs" role="tablist" aria-label="コード検索の入力方法">
+                  <button type="button" class="is-active" role="tab" aria-selected="true" aria-controls="staff-input-method" data-input-method="staff">五線譜をタップ</button>
+                  <button type="button" role="tab" aria-selected="false" aria-controls="piano-input-method" data-input-method="piano">鍵盤入力</button>
                 </div>
 
-                <svg id="input-staff" class="grand-staff input-staff" aria-label="音符を配置する大譜表"></svg>
+                <div id="staff-input-method" role="tabpanel" aria-label="五線譜入力">
+                  <div class="notation-toolbar" aria-label="臨時記号">
+                    <span>臨時記号</span>
+                    <div class="segmented-control" id="accidental-control">
+                      <button type="button" data-accidental="b" aria-pressed="false">♭</button>
+                      <button type="button" data-accidental="" aria-pressed="true">♮</button>
+                      <button type="button" data-accidental="#" aria-pressed="false">♯</button>
+                    </div>
+                    <span class="tap-guide"><i></i> 線・間をタップして追加</span>
+                  </div>
+
+                  <svg id="input-staff" class="grand-staff input-staff" aria-label="音符を配置する五線譜"></svg>
+                </div>
+
+                <div id="piano-input-method" class="piano-input-method" role="tabpanel" aria-label="鍵盤入力" hidden>
+                  <div class="piano-toolbar">
+                    <span>2 OCTAVES</span>
+                    <p>鍵盤を押して音を追加・解除できます。C3〜C5</p>
+                  </div>
+                  <div class="piano-keyboard" id="piano-keyboard" role="group" aria-label="C3からC5までのピアノ鍵盤"></div>
+                </div>
                 <div class="voicing-controls voicing-controls--staff" aria-label="入力した和音の転回操作">
                   <button type="button" id="staff-invert-down" aria-label="入力音の最高音を1オクターブ下げる" disabled>↓ <span>下へ転回</span></button>
                   <button type="button" id="staff-reset-inversion" class="voicing-status" aria-label="入力時の配置" disabled>
@@ -195,10 +212,10 @@
                     <h2>Key center <small>任意</small></h2>
                   </div>
                 </div>
-                <p class="context-copy">指定しなくても解析できます。必要なときだけ調性を加えると、自然な候補を上位にします。</p>
+                <p class="context-copy">Key centerはコードのルートを固定する指定ではなく、曲の調として候補順位に反映します。指定なしでも検索できます。</p>
                 <div class="key-controls">
                   <label>
-                    <span class="field-label">Root <small>任意</small></span>
+                    <span class="field-label">Key root <small>調の主音・任意</small></span>
                     <select id="key-root">
                       <option value="" selected>指定なし</option>
                       <option value="0">C</option><option value="1">D♭</option><option value="2">D</option><option value="3">E♭</option>
@@ -284,6 +301,6 @@
         <p>Made for composers, arrangers &amp; curious ears.</p>
       </footer>
     </div>
-    <script type="module" src="./src/app.js?v=11"></script>
+    <script type="module" src="./src/app.js?v=12"></script>
   </body>
 </html>

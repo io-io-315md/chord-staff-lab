@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChordSymbol, formatKeyName, formatNoteName, invertChordNotes, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
+import { buildChordSymbol, formatKeyName, formatNoteName, frequencyForMidi, invertChordNotes, noteFromMidi, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -90,6 +90,14 @@ test('note names can switch to Japanese solfege without changing chord symbols',
   assert.equal(formatNoteName('B♭', 'solfege'), 'シ♭');
   assert.equal(formatNoteName('C', 'letter'), 'C');
   assert.equal(parseChordSymbol('Cmaj7').symbol, 'Cmaj7');
+});
+
+test('piano keyboard MIDI notes retain pitch and octave', () => {
+  const middleC = noteFromMidi(60);
+  const flatKey = noteFromMidi(61, true);
+  assert.equal(`${middleC.display}${middleC.octave}`, 'C4');
+  assert.equal(`${flatKey.display}${flatKey.octave}`, 'D♭4');
+  assert.equal(frequencyForMidi(69), 440);
 });
 
 test('exact triad is ranked first', () => {

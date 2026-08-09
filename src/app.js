@@ -2,17 +2,19 @@ import {
   buildChordSymbol,
   formatNoteName,
   formatKeyName,
+  frequencyForMidi,
   invertChordNotes,
+  noteFromMidi,
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=11';
+} from './music-theory.js?v=12';
 import {
   pointerYInSvg,
   renderGrandStaff,
   renderNoteReadingStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=11';
+} from './staff-renderer.js?v=12';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -22,6 +24,8 @@ const selectedChordSymbol = document.querySelector('#selected-chord-symbol');
 const chordError = document.querySelector('#chord-error');
 const chordStaff = document.querySelector('#chord-staff');
 const displayedChord = document.querySelector('#displayed-chord');
+const playChordButton = document.querySelector('#play-chord');
+const soundButtonLabel = document.querySelector('#sound-button-label');
 const toneSummary = document.querySelector('#tone-summary');
 const invertDownButton = document.querySelector('#invert-down');
 const invertUpButton = document.querySelector('#invert-up');
@@ -31,6 +35,11 @@ const inversionLabel = document.querySelector('#inversion-label');
 const noteNamingButtons = document.querySelectorAll('[data-note-naming]');
 const noteReadingStaff = document.querySelector('#note-reading-staff');
 const inputStaff = document.querySelector('#input-staff');
+const inputMethodTitle = document.querySelector('#input-method-title');
+const inputMethodButtons = document.querySelectorAll('[data-input-method]');
+const staffInputMethod = document.querySelector('#staff-input-method');
+const pianoInputMethod = document.querySelector('#piano-input-method');
+const pianoKeyboard = document.querySelector('#piano-keyboard');
 const selectedNotesElement = document.querySelector('#selected-notes');
 const staffInvertDownButton = document.querySelector('#staff-invert-down');
 const staffInvertUpButton = document.querySelector('#staff-invert-up');
@@ -49,6 +58,7 @@ const undoButton = document.querySelector('#undo-note');
 const clearButton = document.querySelector('#clear-notes');
 
 let activeAccidental = '';
+let inputMethod = 'staff';
 let placedNotes = [];
 let staffBaseNotes = [];
 let staffInversionSteps = 0;
@@ -56,6 +66,24 @@ let currentCandidates = [];
 let currentChord = null;
 let inversionSteps = 0;
 let noteNaming = 'letter';
+let audioContext = null;
+let activeOscillators = [];
+let activeMasterGain = null;
+let soundResetTimer = null;
+
+const PIANO_START_MIDI = 48;
+const PIANO_END_MIDI = 72;
+const BLACK_PITCH_CLASSES = new Set([1, 3, 6, 8, 10]);
+const PIANO_KEYS = (() => {
+  const keys = [];
+  let whiteIndex = 0;
+  for (let midi = PIANO_START_MIDI; midi <= PIANO_END_MIDI; midi += 1) {
+    const isBlack = BLACK_PITCH_CLASSES.has(midi % 12);
+    keys.push({ midi, isBlack, whiteIndex });
+    if (!isBlack) whiteIndex += 1;
+  }
+  return keys;
+})();
 
 try {
   const savedNoteNaming = localStorage.getItem('chord-staff-lab-note-naming');
@@ -66,6 +94,98 @@ try {
 
 function displayedNoteName(note) {
   return formatNoteName(note, noteNaming);
+}
+
+function renderPianoKeyboard() {
+  const activeMidis = new Set(placedNotes.map((note) => note.midi));
+  const keyMarkup = (key) => {
+    const note = noteFromMidi(key.midi);
+    const active = activeMidis.has(key.midi);
+    const label = `${displayedNoteName(note)}${note.octave}`;
+    const style = key.isBlack ? ` style="--key-left: ${(key.whiteIndex / 15) * 100}%"` : '';
+    return `<button type="button" class="piano-key piano-key--${key.isBlack ? 'black' : 'white'}${active ? ' is-active' : ''}" data-piano-midi="${key.midi}" aria-pressed="${active}" aria-label="${label}を${active ? '解除' : '追加'}"${style}><span>${displayedNoteName(note)}</span><small>${note.octave}</small></button>`;
+  };
+  const whiteKeys = PIANO_KEYS.filter((key) => !key.isBlack).map(keyMarkup).join('');
+  const blackKeys = PIANO_KEYS.filter((key) => key.isBlack).map(keyMarkup).join('');
+  pianoKeyboard.innerHTML = `<div class="piano-white-keys">${whiteKeys}</div>${blackKeys}`;
+}
+
+function setInputMethod(method) {
+  inputMethod = method === 'piano' ? 'piano' : 'staff';
+  const pianoActive = inputMethod === 'piano';
+  staffInputMethod.hidden = pianoActive;
+  pianoInputMethod.hidden = !pianoActive;
+  inputMethodTitle.textContent = pianoActive ? '鍵盤入力' : '五線譜をタップ';
+  inputMethodButtons.forEach((button) => {
+    const active = button.dataset.inputMethod === inputMethod;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+  if (pianoActive) renderPianoKeyboard();
+}
+
+function stopChordSound() {
+  activeOscillators.forEach((oscillator) => {
+    try { oscillator.stop(); } catch { /* The oscillator may already have ended. */ }
+  });
+  activeOscillators = [];
+  activeMasterGain?.disconnect();
+  activeMasterGain = null;
+  clearTimeout(soundResetTimer);
+  playChordButton.classList.remove('is-playing');
+  soundButtonLabel.textContent = 'サウンド';
+}
+
+function addPianoVoice(context, destination, midi, startTime, duration, noteCount) {
+  const frequency = frequencyForMidi(midi);
+  const harmonics = [
+    { multiple: 1, level: 1, release: 1, type: 'triangle' },
+    { multiple: 2, level: 0.34, release: 0.72, type: 'sine' },
+    { multiple: 3, level: 0.16, release: 0.46, type: 'sine' },
+    { multiple: 4, level: 0.07, release: 0.3, type: 'sine' },
+  ];
+  harmonics.forEach((harmonic) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const endTime = startTime + duration * harmonic.release;
+    oscillator.type = harmonic.type;
+    oscillator.frequency.setValueAtTime(frequency * harmonic.multiple, startTime);
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime((0.22 / Math.sqrt(noteCount)) * harmonic.level, startTime + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, endTime);
+    oscillator.connect(gain).connect(destination);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.05);
+    activeOscillators.push(oscillator);
+  });
+}
+
+async function playDisplayedChord() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass || !currentChord) return;
+  stopChordSound();
+  audioContext ||= new AudioContextClass();
+  await audioContext.resume();
+
+  const notes = invertChordNotes(currentChord.notes, inversionSteps);
+  const uniqueNotes = [...new Map(notes.map((note) => [note.midi, note])).values()];
+  const masterGain = audioContext.createGain();
+  activeMasterGain = masterGain;
+  const startTime = audioContext.currentTime + 0.015;
+  const duration = 2;
+  masterGain.gain.setValueAtTime(0.72, startTime);
+  masterGain.connect(audioContext.destination);
+  uniqueNotes.forEach((note, index) => addPianoVoice(audioContext, masterGain, note.midi, startTime + index * 0.006, duration, uniqueNotes.length));
+
+  playChordButton.classList.add('is-playing');
+  soundButtonLabel.textContent = '再生中…';
+  soundResetTimer = setTimeout(() => {
+    activeOscillators = [];
+    playChordButton.classList.remove('is-playing');
+    soundButtonLabel.textContent = 'サウンド';
+    masterGain.disconnect();
+    activeMasterGain = null;
+  }, 2050);
 }
 
 function getSelectedChordSymbol() {
@@ -142,6 +262,13 @@ resetInversionButton.addEventListener('click', () => {
   renderCurrentChord();
 });
 
+playChordButton.addEventListener('click', () => {
+  playDisplayedChord().catch(() => {
+    stopChordSound();
+    soundButtonLabel.textContent = '再生できません';
+  });
+});
+
 chordForm.addEventListener('submit', (event) => {
   event.preventDefault();
   updateChordSelection();
@@ -162,6 +289,10 @@ document.querySelectorAll('.mode-tab').forEach((tab) => {
     document.querySelector('#panel-staff').hidden = tab.dataset.mode !== 'staff';
     if (tab.dataset.mode === 'staff') renderStaffAnalysis();
   });
+});
+
+inputMethodButtons.forEach((button) => {
+  button.addEventListener('click', () => setInputMethod(button.dataset.inputMethod));
 });
 
 function getKeyContext() {
@@ -274,6 +405,7 @@ function renderStaffAnalysis() {
     emptyMessage: placedNotes.length ? '' : 'タップして音符を置く',
     noteLabelFormatter: displayedNoteName,
   });
+  renderPianoKeyboard();
   renderPlacedNotes();
   renderStaffInversionControls();
   renderCandidates();
@@ -337,6 +469,20 @@ inputStaff.addEventListener('keydown', (event) => {
   }
 });
 
+pianoKeyboard.addEventListener('click', (event) => {
+  const key = event.target.closest('[data-piano-midi]');
+  if (!key) return;
+  const midi = Number(key.dataset.pianoMidi);
+  const existingNote = placedNotes.find((note) => note.midi === midi);
+  if (existingNote) {
+    removeNote(existingNote.id);
+    return;
+  }
+  placedNotes.push(noteFromMidi(midi));
+  commitStaffBaseNotes();
+  renderStaffAnalysis();
+});
+
 selectedNotesElement.addEventListener('click', (event) => {
   const button = event.target.closest('[data-remove-note]');
   if (button) removeNote(button.dataset.removeNote);
@@ -389,4 +535,5 @@ noteNamingButtons.forEach((button) => {
 });
 
 applyNoteNaming(noteNaming);
+setInputMethod(inputMethod);
 updateChordSelection();

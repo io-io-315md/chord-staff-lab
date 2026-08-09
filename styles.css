@@ -180,8 +180,11 @@ select:focus-visible,
 
 .pane-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 21px; }
 .pane-header h2 { font-size: 35px; }
-.status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border-radius: 20px; background: #edf2ea; color: #4d6759; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-.status-pill i, .tap-guide i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #6c9a74; }
+.sound-button { display: inline-flex; min-height: 38px; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid #c8d5cc; border-radius: 20px; background: #edf2ea; color: #385446; cursor: pointer; font-size: 11px; letter-spacing: 0.06em; }
+.sound-button span { color: var(--accent); font-family: Georgia, serif; font-size: 17px; line-height: 1; }
+.sound-button strong { font-size: 10px; }
+.sound-button:hover, .sound-button.is-playing { border-color: var(--accent); background: #fff; color: var(--accent-dark); }
+.tap-guide i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #6c9a74; }
 
 .grand-staff { display: block; width: 100%; min-height: 245px; touch-action: manipulation; user-select: none; }
 .staff-background { fill: #f8f6ef; stroke: #e5dfd3; }
@@ -281,6 +284,9 @@ html[data-note-naming="solfege"] [data-reading-row="solfege"] { background: #edf
 .text-button { min-height: 40px; padding: 8px 13px; border: 1px solid #c7c1b6; border-radius: 7px; background: #f8f5ee; color: #4f5751; cursor: pointer; font-size: 14px; font-weight: 750; }
 .text-button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-dark); background: #fff; }
 .text-button:disabled { opacity: 0.35; cursor: default; }
+.input-method-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 0 0 12px; padding: 5px; border: 1px solid var(--line); border-radius: 9px; background: #f1eee6; }
+.input-method-tabs button { min-height: 39px; padding: 8px 12px; border: 0; border-radius: 6px; background: transparent; color: #69706b; cursor: pointer; font-size: 12px; font-weight: 750; }
+.input-method-tabs button.is-active { background: var(--deep); color: #fff; box-shadow: 0 2px 8px rgba(28, 53, 42, 0.14); }
 .notation-toolbar { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #f7f4ed; }
 .notation-toolbar > span:first-child { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
 .segmented-control { display: inline-flex; overflow: hidden; border: 1px solid #bbb7ae; border-radius: 5px; }
@@ -290,6 +296,22 @@ html[data-note-naming="solfege"] [data-reading-row="solfege"] { background: #edf
 .tap-guide { margin-left: auto; color: #8d8e87; font-size: 10px; }
 .tap-guide i { background: var(--accent); margin-right: 4px; }
 .input-staff { margin-top: 6px; }
+.piano-input-method { padding: 13px 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: #f7f4ed; }
+.piano-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
+.piano-toolbar span { color: var(--accent-dark); font-size: 9px; font-weight: 800; letter-spacing: 0.14em; }
+.piano-toolbar p { margin: 0; color: var(--muted); font-size: 10px; }
+.piano-keyboard { position: relative; height: 170px; overflow: hidden; border: 1px solid #797c77; border-radius: 7px; background: #202a25; user-select: none; }
+.piano-white-keys { display: grid; height: 100%; grid-template-columns: repeat(15, minmax(0, 1fr)); }
+.piano-key { position: relative; border: 0; cursor: pointer; font-family: Georgia, "Yu Mincho", serif; transition: background 0.12s, color 0.12s, transform 0.08s; }
+.piano-key:active { transform: translateY(2px); }
+.piano-key--white { display: flex; min-width: 0; align-items: flex-end; justify-content: center; padding: 0 1px 10px; border-right: 1px solid #a9aaa5; background: #fffdf8; color: #5d635f; }
+.piano-key--white:last-child { border-right: 0; }
+.piano-key--black { position: absolute; z-index: 2; top: 0; left: var(--key-left); width: 4.8%; height: 62%; padding: 0 2px 9px; transform: translateX(-50%); border: 1px solid #111814; border-radius: 0 0 5px 5px; background: #1d2722; color: #f6f3eb; box-shadow: 0 4px 5px rgba(0, 0, 0, 0.28); }
+.piano-key--black:active { transform: translateX(-50%) translateY(2px); }
+.piano-key.is-active { background: var(--accent); color: #fff; }
+.piano-key--black.is-active { background: #b74429; }
+.piano-key span { display: block; overflow: hidden; font-size: 10px; text-overflow: clip; white-space: nowrap; }
+.piano-key small { display: block; margin-top: 2px; font-family: Inter, sans-serif; font-size: 7px; opacity: 0.72; }
 .selected-notes { display: flex; min-height: 40px; flex-wrap: wrap; gap: 7px; align-items: center; padding: 8px 5px 0; }
 .bass-detection-hint { margin: 10px 5px 0; padding-left: 10px; border-left: 2px solid #c9a18f; color: #777d78; font-size: 10px; line-height: 1.65; }
 .note-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; border: 1px solid #c9c3b8; border-radius: 18px; background: #fff; font-family: Georgia, serif; font-size: 12px; }
@@ -387,6 +409,12 @@ footer p { margin: 0; font-style: italic; }
   .text-button { min-height: 42px; padding-inline: 12px; }
   .notation-toolbar { flex-wrap: wrap; }
   .tap-guide { width: 100%; margin-left: 0; }
+  .piano-input-method { padding-inline: 9px; }
+  .piano-toolbar { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .piano-keyboard { height: 138px; }
+  .piano-key--white { padding-bottom: 7px; }
+  .piano-key--black { width: 5.2%; padding-bottom: 6px; }
+  .piano-key span { font-size: 8px; }
   .analysis-pane { display: block; padding: 28px 20px 32px; }
   .candidate-heading { margin-top: 27px; }
   .candidate-preview { margin-top: 14px; }

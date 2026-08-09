@@ -281,6 +281,24 @@ export function noteFromStaffPosition(letter, octave, accidental = '') {
   };
 }
 
+export function noteFromMidi(midi, preferFlats = false) {
+  const numericMidi = Number(midi);
+  if (!Number.isInteger(numericMidi) || numericMidi < 0 || numericMidi > 127) {
+    throw new Error('MIDIノート番号は0〜127の整数で指定してください。');
+  }
+  const parsed = parseNoteName(preferredPitchName(numericMidi, preferFlats));
+  return {
+    ...parsed,
+    octave: Math.floor(numericMidi / 12) - 1,
+    midi: numericMidi,
+    id: `piano-${numericMidi}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  };
+}
+
+export function frequencyForMidi(midi) {
+  return 440 * (2 ** ((Number(midi) - 69) / 12));
+}
+
 export function formatKeyName(key) {
   if (key?.root === '' || key?.root === null || key?.root === undefined) return 'Key center 指定なし';
   return `${preferredPitchName(Number(key.root), Boolean(key.preferFlats))} ${key.mode === 'minor' ? 'Minor' : 'Major'}`;
