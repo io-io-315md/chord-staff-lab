@@ -8,13 +8,13 @@ import {
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=12';
+} from './music-theory.js?v=13';
 import {
   pointerYInSvg,
   renderGrandStaff,
   renderNoteReadingStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=12';
+} from './staff-renderer.js?v=13';
 
 const chordForm = document.querySelector('#chord-form');
 const chordRoot = document.querySelector('#chord-root');
@@ -69,6 +69,8 @@ let noteNaming = 'letter';
 let audioContext = null;
 let activeOscillators = [];
 let activeMasterGain = null;
+let activeSoundKey = null;
+let soundRequestId = 0;
 let soundResetTimer = null;
 
 const PIANO_START_MIDI = 48;
@@ -125,12 +127,14 @@ function setInputMethod(method) {
 }
 
 function stopChordSound() {
+  soundRequestId += 1;
   activeOscillators.forEach((oscillator) => {
     try { oscillator.stop(); } catch { /* The oscillator may already have ended. */ }
   });
   activeOscillators = [];
   activeMasterGain?.disconnect();
   activeMasterGain = null;
+  activeSoundKey = null;
   clearTimeout(soundResetTimer);
   playChordButton.classList.remove('is-playing');
   soundButtonLabel.textContent = 'サウンド';
@@ -160,32 +164,63 @@ function addPianoVoice(context, destination, midi, startTime, duration, noteCoun
   });
 }
 
-async function playDisplayedChord() {
+async function playNotes(notes, { soundKey = '', showButtonState = false, skipIfSame = false } = {}) {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass || !currentChord) return;
+  if (!AudioContextClass || !notes?.length) {
+    stopChordSound();
+    return;
+  }
+  if (skipIfSame && activeSoundKey === soundKey && activeOscillators.length) return;
   stopChordSound();
+  const requestId = soundRequestId;
   audioContext ||= new AudioContextClass();
   await audioContext.resume();
+  if (requestId !== soundRequestId) return;
 
-  const notes = invertChordNotes(currentChord.notes, inversionSteps);
   const uniqueNotes = [...new Map(notes.map((note) => [note.midi, note])).values()];
   const masterGain = audioContext.createGain();
   activeMasterGain = masterGain;
+  activeSoundKey = soundKey;
   const startTime = audioContext.currentTime + 0.015;
   const duration = 2;
   masterGain.gain.setValueAtTime(0.72, startTime);
   masterGain.connect(audioContext.destination);
   uniqueNotes.forEach((note, index) => addPianoVoice(audioContext, masterGain, note.midi, startTime + index * 0.006, duration, uniqueNotes.length));
 
-  playChordButton.classList.add('is-playing');
-  soundButtonLabel.textContent = '再生中…';
+  if (showButtonState) {
+    playChordButton.classList.add('is-playing');
+    soundButtonLabel.textContent = '再生中…';
+  }
   soundResetTimer = setTimeout(() => {
     activeOscillators = [];
     playChordButton.classList.remove('is-playing');
     soundButtonLabel.textContent = 'サウンド';
     masterGain.disconnect();
     activeMasterGain = null;
+    activeSoundKey = null;
   }, 2050);
+}
+
+function playDisplayedChord() {
+  if (!currentChord) return Promise.resolve();
+  const notes = invertChordNotes(currentChord.notes, inversionSteps);
+  return playNotes(notes, {
+    soundKey: `display:${currentChord.symbol}:${inversionSteps}`,
+    showButtonState: true,
+  });
+}
+
+function playInputChord() {
+  return playNotes(placedNotes, {
+    soundKey: `input:${placedNotes.map((note) => note.midi).sort((a, b) => a - b).join(',')}`,
+  });
+}
+
+function playCandidateChord(candidate, notes) {
+  return playNotes(notes, {
+    soundKey: `candidate:${candidate.symbol}`,
+    skipIfSame: true,
+  });
 }
 
 function getSelectedChordSymbol() {
@@ -230,7 +265,10 @@ function renderCurrentChord() {
 function renderChord(value, { resetInversion = true } = {}) {
   try {
     currentChord = parseChordSymbol(value);
-    if (resetInversion) inversionSteps = 0;
+    if (resetInversion) {
+      stopChordSound();
+      inversionSteps = 0;
+    }
     chordError.hidden = true;
     renderCurrentChord();
     return true;
@@ -244,6 +282,7 @@ function renderChord(value, { resetInversion = true } = {}) {
 invertDownButton.addEventListener('click', () => {
   const maxInversions = Math.max(1, currentChord.notes.length - 1);
   if (inversionSteps > -maxInversions) {
+    stopChordSound();
     inversionSteps -= 1;
     renderCurrentChord();
   }
@@ -252,12 +291,14 @@ invertDownButton.addEventListener('click', () => {
 invertUpButton.addEventListener('click', () => {
   const maxInversions = Math.max(1, currentChord.notes.length - 1);
   if (inversionSteps < maxInversions) {
+    stopChordSound();
     inversionSteps += 1;
     renderCurrentChord();
   }
 });
 
 resetInversionButton.addEventListener('click', () => {
+  stopChordSound();
   inversionSteps = 0;
   renderCurrentChord();
 });
@@ -313,7 +354,7 @@ function clearCandidatePreview() {
   candidatePreview.classList.add('is-empty');
   candidatePreviewName.textContent = '候補を選択';
   candidatePreviewStaff.replaceChildren();
-  candidatePreviewDetail.textContent = '右の候補にカーソルを合わせるか、タップすると音符を表示します。';
+  candidatePreviewDetail.textContent = '右の候補にカーソルを合わせるか、タップすると音符を表示して再生します。';
   candidateList.querySelectorAll('.candidate-card').forEach((card) => card.classList.remove('is-previewing'));
 }
 
@@ -342,6 +383,7 @@ function renderCandidatePreview(candidate, index) {
   candidateList.querySelectorAll('.candidate-card').forEach((card) => {
     card.classList.toggle('is-previewing', Number(card.dataset.candidateIndex) === index);
   });
+  playCandidateChord(candidate, previewChord.notes).catch(stopChordSound);
 }
 
 function renderCandidates() {
@@ -375,7 +417,6 @@ function renderCandidates() {
     .join('');
   candidateList.querySelectorAll('.candidate-card').forEach((card) => {
     card.addEventListener('pointerenter', previewCandidateFromEvent);
-    card.addEventListener('mouseenter', previewCandidateFromEvent);
   });
   clearCandidatePreview();
 }
@@ -433,6 +474,7 @@ function applyStaffInversion(nextSteps) {
   staffInversionSteps = Math.max(-maxInversions, Math.min(maxInversions, nextSteps));
   placedNotes = invertChordNotes(staffBaseNotes, staffInversionSteps);
   renderStaffAnalysis();
+  playInputChord().catch(stopChordSound);
 }
 
 staffInvertDownButton.addEventListener('click', () => applyStaffInversion(staffInversionSteps - 1));
@@ -443,6 +485,7 @@ function removeNote(id) {
   placedNotes = placedNotes.filter((note) => note.id !== id);
   commitStaffBaseNotes();
   renderStaffAnalysis();
+  playInputChord().catch(stopChordSound);
 }
 
 function placeNoteAtEvent(event) {
@@ -459,6 +502,7 @@ function placeNoteAtEvent(event) {
   placedNotes.push(note);
   commitStaffBaseNotes();
   renderStaffAnalysis();
+  playInputChord().catch(stopChordSound);
 }
 
 inputStaff.addEventListener('pointerup', placeNoteAtEvent);
@@ -481,6 +525,7 @@ pianoKeyboard.addEventListener('click', (event) => {
   placedNotes.push(noteFromMidi(midi));
   commitStaffBaseNotes();
   renderStaffAnalysis();
+  playInputChord().catch(stopChordSound);
 });
 
 selectedNotesElement.addEventListener('click', (event) => {
@@ -500,12 +545,14 @@ undoButton.addEventListener('click', () => {
   placedNotes = placedNotes.filter((note) => note.id !== lastAddedId);
   commitStaffBaseNotes();
   renderStaffAnalysis();
+  playInputChord().catch(stopChordSound);
 });
 
 clearButton.addEventListener('click', () => {
   placedNotes = [];
   commitStaffBaseNotes();
   renderStaffAnalysis();
+  stopChordSound();
 });
 
 keyRoot.addEventListener('change', () => {

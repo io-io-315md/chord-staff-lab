@@ -196,12 +196,13 @@ select:focus-visible,
 .note-head { fill: var(--accent); stroke: #fff8f0; stroke-width: 1; }
 .note-stem { stroke: var(--accent); stroke-width: 1.7; }
 .note-stem--shared { pointer-events: none; }
-.accidental { fill: var(--ink); font-family: Georgia, "Noto Music", serif; font-size: 22px; }
+.accidental { color: var(--accent); fill: currentColor; stroke: currentColor; stroke-width: 0.38px; paint-order: stroke fill; font-family: Georgia, "Noto Music", serif; font-size: 24px; font-weight: 700; }
 .staff-empty { fill: #a6a39c; font-family: Georgia, "Yu Mincho", serif; font-size: 14px; font-style: italic; }
 .pitch-hit-zone { fill: transparent; cursor: crosshair; }
 .grand-staff--interactive:hover .pitch-hit-zone:hover { fill: rgba(214, 85, 50, 0.065); }
 .staff-note--interactive { cursor: pointer; }
 .staff-note--interactive:hover .note-head { fill: var(--accent-dark); }
+.staff-note--interactive:hover .accidental { color: var(--accent-dark); }
 
 .voicing-controls {
   display: grid;
@@ -333,7 +334,6 @@ html[data-note-naming="solfege"] [data-reading-row="solfege"] { background: #edf
 .candidate-preview-staff { min-height: 135px; }
 .candidate-preview-staff .staff-background { fill: #f8f6ef; }
 .candidate-preview-staff .staff-note--missing .note-head { fill: #fffaf2; stroke: var(--accent); stroke-width: 3; }
-.candidate-preview-staff .staff-note--missing .accidental { fill: #b8735d; }
 .candidate-preview-legend { display: flex; gap: 13px; margin-top: 5px; color: #b8c5bc; font-size: 9px; }
 .candidate-preview-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .preview-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }

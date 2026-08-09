@@ -66,7 +66,26 @@ function noteXOffsets(notes) {
   return offsets;
 }
 
-function renderNote(svg, note, xOffset, interactive, noteLabelFormatter, noteClass) {
+export function accidentalColumns(notes) {
+  const assignments = Array(notes.length).fill(null);
+  const columnYs = [];
+  notes
+    .map((note, index) => ({ note, index, y: yForNote(note) }))
+    .filter(({ note }) => Boolean(note.accidental))
+    .sort((a, b) => a.y - b.y)
+    .forEach(({ index, y }) => {
+      let column = columnYs.findIndex((usedYs) => usedYs.every((usedY) => Math.abs(usedY - y) >= 21));
+      if (column === -1) {
+        column = columnYs.length;
+        columnYs.push([]);
+      }
+      columnYs[column].push(y);
+      assignments[index] = column;
+    });
+  return assignments;
+}
+
+function renderNote(svg, note, xOffset, accidentalColumn, interactive, noteLabelFormatter, noteClass) {
   const y = yForNote(note);
   const x = NOTE_X + xOffset;
   const group = svgElement('g', {
@@ -88,7 +107,13 @@ function renderNote(svg, note, xOffset, interactive, noteLabelFormatter, noteCla
   });
 
   if (note.accidental) {
-    group.append(svgElement('text', { x: x - 23, y: y + 6, class: 'accidental' }, accidentalGlyph(note.accidental)));
+    const accidentalX = NOTE_X - 35 - (accidentalColumn || 0) * 24;
+    group.append(svgElement('text', {
+      x: accidentalX,
+      y: y + 7,
+      class: 'accidental',
+      'text-anchor': 'middle',
+    }, accidentalGlyph(note.accidental)));
   }
   group.append(svgElement('ellipse', { cx: x, cy: y, rx: 9.5, ry: 6.6, transform: `rotate(-18 ${x} ${y})`, class: 'note-head' }));
   return group;
@@ -112,7 +137,7 @@ export function renderGrandStaff(svg, notes = [], {
   svg.append(svgElement('line', { x1: STAFF_X_START, y1: 202, x2: STAFF_X_START, y2: 342, class: 'staff-bar' }));
   svg.append(svgElement('line', { x1: STAFF_X_END, y1: 202, x2: STAFF_X_END, y2: 342, class: 'staff-bar staff-bar--end' }));
   svg.append(svgElement('text', { x: 86, y: 252, class: 'clef clef--treble' }, '𝄞'));
-  svg.append(svgElement('text', { x: 91, y: 336, class: 'clef clef--bass' }, '𝄢'));
+  svg.append(svgElement('text', { x: 84, y: 326, class: 'clef clef--bass' }, '𝄢'));
 
   if (interactive) {
     for (let number = 14; number <= 42; number += 1) {
@@ -126,6 +151,7 @@ export function renderGrandStaff(svg, notes = [], {
   }
 
   const offsets = noteXOffsets(notes);
+  const accidentalColumnByNote = accidentalColumns(notes);
   if (notes.length) {
     const noteYs = notes.map(yForNote);
     svg.append(svgElement('line', {
@@ -140,6 +166,7 @@ export function renderGrandStaff(svg, notes = [], {
     svg,
     note,
     offsets[index],
+    accidentalColumnByNote[index],
     interactive,
     noteLabelFormatter,
     noteClassResolver(note),

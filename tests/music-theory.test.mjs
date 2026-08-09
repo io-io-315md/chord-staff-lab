@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildChordSymbol, formatKeyName, formatNoteName, frequencyForMidi, invertChordNotes, noteFromMidi, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
+import { accidentalColumns } from '../src/staff-renderer.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -98,6 +99,16 @@ test('piano keyboard MIDI notes retain pitch and octave', () => {
   assert.equal(`${middleC.display}${middleC.octave}`, 'C4');
   assert.equal(`${flatKey.display}${flatKey.octave}`, 'D♭4');
   assert.equal(frequencyForMidi(69), 440);
+});
+
+test('nearby accidentals are staggered into separate notation columns', () => {
+  const notes = [
+    { letter: 'C', accidental: '♯', octave: 4 },
+    { letter: 'D', accidental: '♭', octave: 4 },
+    { letter: 'E', accidental: '♭', octave: 4 },
+    { letter: 'A', accidental: '♭', octave: 4 },
+  ];
+  assert.deepEqual(accidentalColumns(notes), [2, 1, 0, 0]);
 });
 
 test('exact triad is ranked first', () => {
