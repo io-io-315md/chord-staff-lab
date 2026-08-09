@@ -5,6 +5,7 @@ const STAFF_X_START = 76;
 const STAFF_X_END = 704;
 const NOTE_X = 390;
 const DIATONIC_Y_CONSTANT = 468;
+const LEDGER_LINE_HALF_WIDTH = 24;
 
 function svgElement(name, attributes = {}, text = '') {
   const element = document.createElementNS(SVG_NS, name);
@@ -48,6 +49,13 @@ function ledgerNumbersForNote(note) {
     for (let current = 28; current <= number; current += 2) ledgers.push(current);
   }
   return ledgers;
+}
+
+export function ledgerLineBounds(x) {
+  return {
+    x1: x - LEDGER_LINE_HALF_WIDTH,
+    x2: x + LEDGER_LINE_HALF_WIDTH,
+  };
 }
 
 function accidentalGlyph(accidental) {
@@ -97,10 +105,11 @@ function renderNote(svg, note, xOffset, accidentalColumn, interactive, noteLabel
   });
 
   ledgerNumbersForNote(note).forEach((number) => {
+    const { x1, x2 } = ledgerLineBounds(x);
     group.append(svgElement('line', {
-      x1: x - 17,
+      x1,
       y1: DIATONIC_Y_CONSTANT - number * STEP,
-      x2: x + 18,
+      x2,
       y2: DIATONIC_Y_CONSTANT - number * STEP,
       class: 'ledger-line',
     }));

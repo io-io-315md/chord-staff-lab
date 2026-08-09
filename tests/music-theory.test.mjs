@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildChordSymbol, formatKeyName, formatNoteName, frequencyForMidi, invertChordNotes, noteFromMidi, parseChordSymbol, rankChordCandidates } from '../src/music-theory.js';
-import { accidentalColumns } from '../src/staff-renderer.js';
+import { accidentalColumns, ledgerLineBounds } from '../src/staff-renderer.js';
 
 const displays = (symbol) => parseChordSymbol(symbol).notes.filter((note) => note.role !== 'bass').map((note) => note.display);
 const inputNote = (display, pitchClass, midi) => ({ display, pitchClass, midi });
@@ -109,6 +109,10 @@ test('nearby accidentals are staggered into separate notation columns', () => {
     { letter: 'A', accidental: '♭', octave: 4 },
   ];
   assert.deepEqual(accidentalColumns(notes), [2, 1, 0, 0]);
+});
+
+test('ledger lines extend clearly past both sides of a note head', () => {
+  assert.deepEqual(ledgerLineBounds(390), { x1: 366, x2: 414 });
 });
 
 test('exact triad is ranked first', () => {

@@ -184,7 +184,8 @@ select:focus-visible,
 
 .grand-staff { display: block; width: 100%; min-height: 245px; touch-action: manipulation; user-select: none; }
 .staff-background { fill: #f8f6ef; stroke: #e5dfd3; }
-.staff-line, .ledger-line, .staff-bar { stroke: #38423c; stroke-width: 1; }
+.staff-line, .staff-bar { stroke: #38423c; stroke-width: 1; }
+.ledger-line { stroke: #38423c; stroke-width: 1.15; stroke-linecap: square; }
 .staff-bar--end { stroke-width: 2; }
 .clef { fill: var(--ink); font-family: "Segoe UI Symbol", "Noto Music", serif; }
 .clef--treble { font-size: 69px; }

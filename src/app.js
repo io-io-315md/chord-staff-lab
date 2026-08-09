@@ -8,13 +8,13 @@ import {
   noteFromStaffPosition,
   parseChordSymbol,
   rankChordCandidates,
-} from './music-theory.js?v=14';
+} from './music-theory.js?v=15';
 import {
   pointerYInSvg,
   renderGrandStaff,
   renderNoteReadingStaff,
   staffPositionFromY,
-} from './staff-renderer.js?v=14';
+} from './staff-renderer.js?v=15';
 
 const chordRoot = document.querySelector('#chord-root');
 const chordQuality = document.querySelector('#chord-quality');
