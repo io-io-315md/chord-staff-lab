@@ -27,6 +27,26 @@ test('flat roots and ninth extensions are preserved', () => {
   assert.deepEqual(displays('Bbmaj9'), ['B♭', 'D', 'F', 'A', 'C']);
 });
 
+test('altered dominant tensions are parsed and spelled by degree', () => {
+  assert.deepEqual(displays('G7b9'), ['G', 'B', 'D', 'F', 'A♭']);
+  assert.deepEqual(displays('G7#9'), ['G', 'B', 'D', 'F', 'A♯']);
+  assert.deepEqual(displays('G7#11'), ['G', 'B', 'D', 'F', 'C♯']);
+  assert.deepEqual(displays('G7b13'), ['G', 'B', 'D', 'F', 'E♭']);
+});
+
+test('combined altered tensions use canonical symbols and omit the natural fifth', () => {
+  const chord = parseChordSymbol('G7(b9,b13)');
+  assert.equal(chord.symbol, 'G7(♭9,♭13)');
+  assert.deepEqual(displays('G7(b9,b13)'), ['G', 'B', 'F', 'A♭', 'E♭']);
+  assert.deepEqual(chord.type.tones.map((item) => item.label), ['1', '3', '♭7', '♭9', '♭13']);
+});
+
+test('altered dominant chords work with slash bass selection', () => {
+  const symbol = buildChordSymbol('G', '7b9', 'B');
+  assert.equal(symbol, 'G7b9/B');
+  assert.equal(parseChordSymbol(symbol).symbol, 'G7(♭9)/B');
+});
+
 test('slash chord places the requested bass below the chord', () => {
   const chord = parseChordSymbol('C/E');
   assert.equal(chord.symbol, 'C/E');
@@ -77,6 +97,32 @@ test('exact triad is ranked first', () => {
   const [candidate] = rankChordCandidates(notes, { root: 0, mode: 'major' });
   assert.equal(candidate.symbol, 'C');
   assert.equal(candidate.exact, true);
+});
+
+test('altered dominant input is ranked as an exact chord', () => {
+  const notes = [
+    inputNote('G', 7, 67),
+    inputNote('B', 11, 71),
+    inputNote('D', 2, 74),
+    inputNote('F', 5, 77),
+    inputNote('A♭', 8, 80),
+  ];
+  const [candidate] = rankChordCandidates(notes, null);
+  assert.equal(candidate.symbol, 'G7(♭9)');
+  assert.equal(candidate.exact, true);
+});
+
+test('altered candidate reports missing tensions with harmonic spelling', () => {
+  const notes = [
+    inputNote('G', 7, 67),
+    inputNote('B', 11, 71),
+    inputNote('D', 2, 74),
+    inputNote('F', 5, 77),
+  ];
+  const candidates = rankChordCandidates(notes, null);
+  const flatNine = candidates.find((candidate) => candidate.symbol === 'G7(♭9)');
+  assert.ok(flatNine);
+  assert.deepEqual(flatNine.missingNoteNames, ['A♭']);
 });
 
 test('lowest treble-clef note is treated as an inversion, not a slash bass', () => {

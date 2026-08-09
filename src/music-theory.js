@@ -6,6 +6,14 @@ const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A'
 const tone = (semitones, degree, label) => ({ semitones, degree, label });
 
 export const CHORD_TYPES = [
+  { suffix: '7(♭9,♭13)', aliases: ['7b9b13', '7(b9,b13)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(10, 7, '♭7'), tone(13, 9, '♭9'), tone(20, 13, '♭13')], complexity: 5 },
+  { suffix: '7(♯9,♭13)', aliases: ['7#9b13', '7(#9,b13)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(10, 7, '♭7'), tone(15, 9, '♯9'), tone(20, 13, '♭13')], complexity: 5 },
+  { suffix: '7(♭9,♯11)', aliases: ['7b9#11', '7(b9,#11)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(10, 7, '♭7'), tone(13, 9, '♭9'), tone(18, 11, '♯11')], complexity: 5 },
+  { suffix: '7(♯9,♯11)', aliases: ['7#9#11', '7(#9,#11)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(10, 7, '♭7'), tone(15, 9, '♯9'), tone(18, 11, '♯11')], complexity: 5 },
+  { suffix: '7(♭9)', aliases: ['7b9', '7(b9)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(7, 5, '5'), tone(10, 7, '♭7'), tone(13, 9, '♭9')], complexity: 4 },
+  { suffix: '7(♯9)', aliases: ['7#9', '7(#9)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(7, 5, '5'), tone(10, 7, '♭7'), tone(15, 9, '♯9')], complexity: 4 },
+  { suffix: '7(♯11)', aliases: ['7#11', '7(#11)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(7, 5, '5'), tone(10, 7, '♭7'), tone(18, 11, '♯11')], complexity: 4 },
+  { suffix: '7(♭13)', aliases: ['7b13', '7(b13)'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(7, 5, '5'), tone(10, 7, '♭7'), tone(20, 13, '♭13')], complexity: 4 },
   { suffix: 'maj13', aliases: ['maj13', 'M13', 'Δ13'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(7, 5, '5'), tone(11, 7, '7'), tone(14, 9, '9'), tone(21, 13, '13')], complexity: 5 },
   { suffix: 'm13', aliases: ['m13', 'min13'], tones: [tone(0, 1, '1'), tone(3, 3, '♭3'), tone(7, 5, '5'), tone(10, 7, '♭7'), tone(14, 9, '9'), tone(21, 13, '13')], complexity: 5 },
   { suffix: '13', aliases: ['13'], tones: [tone(0, 1, '1'), tone(4, 3, '3'), tone(7, 5, '5'), tone(10, 7, '♭7'), tone(14, 9, '9'), tone(21, 13, '13')], complexity: 5 },
@@ -231,16 +239,18 @@ export function rankChordCandidates(inputNotes, key = null) {
       }
 
       const rootName = preferredPitchName(rootPitchClass, preferFlats);
+      const spelledRoot = parseNoteName(rootName);
       const slash = explicitBass && explicitBass.pitchClass !== rootPitchClass ? `/${selectedBassName}` : '';
       const symbol = `${rootName}${type.suffix}${slash}`;
-      const missingNoteNames = [...chordSet]
-        .filter((pitchClass) => !uniquePitchClasses.has(pitchClass))
-        .map((pitchClass) => preferredPitchName(pitchClass, preferFlats));
+      const missingNoteNames = type.tones
+        .filter((toneInfo) => !uniquePitchClasses.has(mod(rootPitchClass + toneInfo.semitones)))
+        .map((toneInfo) => spellTone(spelledRoot, toneInfo).display)
+        .filter((display, index, names) => names.indexOf(display) === index);
       const extraNoteNames = [...uniquePitchClasses]
         .filter((pitchClass) => !chordSet.has(pitchClass))
         .map((pitchClass) => preferredPitchName(pitchClass, preferFlats));
       const notes = type.tones.map((toneInfo) => ({
-        ...spellTone(parseNoteName(rootName), toneInfo),
+        ...spellTone(spelledRoot, toneInfo),
         degree: toneInfo.label,
       }));
 
